@@ -1,0 +1,1052 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>MADZ · Eğlenerek Öğren</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;font-family:'Poppins','Segoe UI',sans-serif}
+        body{min-height:100vh;background:radial-gradient(circle at 20% 30%, #1a1a2e, #16213e);display:flex;align-items:center;justify-content:center;padding:16px;overflow:hidden;touch-action:manipulation}
+        #app{width:100%;max-width:1200px;height:95vh;max-height:900px;background:rgba(255,255,255,0.05);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.2);border-radius:48px;box-shadow:0 30px 50px rgba(0,0,0,0.5);overflow:hidden;position:relative}
+        .screen{width:100%;height:100%;padding:24px;display:none;flex-direction:column;overflow-y:auto}
+        .screen.active{display:flex}
+        .madz-title{font-size:clamp(4rem,10vw,7rem);font-weight:900;color:#FFD700;text-shadow: 0 4px 0 #b8860b, 0 8px 20px rgba(0,0,0,0.4);letter-spacing:12px}
+        .madz-slogan{color:#e0e0ff;font-size:clamp(1.2rem,3vw,1.6rem);background:rgba(0,0,0,0.3);padding:12px 32px;border-radius:60px}
+        .btn-3d, .card-btn, .ctrl-btn, .fen-btn, .option-btn, .pause-btn, .back-btn{touch-action:manipulation;-webkit-tap-highlight-color:transparent;user-select:none}
+        .btn-3d{background:linear-gradient(145deg,#ffd700,#ffb300);border:none;color:#1a1a2e;font-weight:800;font-size:1.2rem;padding:14px 28px;border-radius:60px;cursor:pointer;box-shadow:0 10px 0 #b26500,0 6px 15px rgba(0,0,0,0.3);transition:0.08s;text-transform:uppercase;transform:translateY(-2px)}
+        .btn-3d:active{box-shadow:0 4px 0 #b26500;transform:translateY(6px)}
+        .input-3d{background:rgba(255,255,255,0.9);border:none;padding:16px 24px;border-radius:60px;font-size:1.2rem;width:100%;max-width:400px;text-align:center;box-shadow:inset 0 6px 8px rgba(0,0,0,0.2),0 8px 0 #0f3460;border:1px solid #00d2ff;outline:none;font-weight:600;touch-action:manipulation}
+        .course-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:16px;margin:20px 0;flex:1;align-content:center}
+        @media(max-width:1000px){.course-grid{grid-template-columns:repeat(3,1fr)}}
+        @media(max-width:600px){.course-grid{grid-template-columns:repeat(2,1fr)}}
+        .course-card{background:rgba(20,30,50,0.7);backdrop-filter:blur(8px);border-radius:40px;padding:20px 12px;display:flex;flex-direction:column;align-items:center;text-align:center;border:2px solid rgba(255,255,255,0.2);box-shadow:0 15px 0 rgba(0,0,0,0.3);transform:translateY(-3px);color:white;transition:all 0.25s ease-out;touch-action:manipulation}
+        @media (hover: hover){.course-card:hover{box-shadow: 0 0 25px gold, 0 15px 0 rgba(0,0,0,0.4);border-color: rgba(255,215,0,0.7);transform: translateY(-6px)}}
+        .course-card:active{box-shadow: 0 0 30px gold, 0 10px 0 rgba(0,0,0,0.5);border-color: gold;transform: scale(0.97)}
+        .course-card i{font-size:2.8rem;margin-bottom:12px}
+        .course-card h3{font-size:1.5rem;font-weight:800;margin-bottom:6px}
+        .course-card p{opacity:0.9;margin-bottom:16px;font-size:0.9rem}
+        .card-btn{background:white;border:none;padding:10px 16px;border-radius:40px;font-weight:bold;font-size:1rem;width:100%;cursor:pointer;box-shadow:0 6px 0 #999;transform:translateY(-2px);color:#1a1a2e}
+        .card-btn:active{box-shadow:0 3px 0 #666;transform:translateY(3px)}
+        .card-btn.disabled{background:#aaa;box-shadow:0 5px 0 #555;pointer-events:none;opacity:0.7}
+        .game-container{position:relative;flex:1;border-radius:24px;overflow:hidden;box-shadow:inset 0 0 40px black,0 15px 0 #0a1a12;border:3px solid #ffd700;min-height:400px}
+        .back-btn{position:absolute;left:16px;top:16px;z-index:20;background:rgba(0,0,0,0.5);border:2px solid rgba(255,255,255,0.2);color:white;padding:8px 16px;border-radius:40px;font-weight:bold;cursor:pointer}
+        .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.85);backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;z-index:1000}
+        .modal-card{background:linear-gradient(145deg,#2a2a4a,#151530);padding:25px;border-radius:40px;max-width:500px;width:90%;border:3px solid #ffd966;box-shadow:0 20px 0 #0b0b1a;color:white;text-align:center;max-height:80vh;overflow-y:auto}
+        .modal-input{width:100%;padding:14px;font-size:1.2rem;border-radius:30px;border:none;margin:15px 0;text-align:center;font-weight:bold}
+        .option-btn{background:#e0e0ff;border:none;padding:8px 12px;margin:4px;border-radius:25px;font-size:0.9rem;font-weight:bold;cursor:pointer;width:calc(50% - 12px);box-shadow:0 4px 0 #7a7ab0;color:#1a1a2e}
+        .hud{position:absolute;left:16px;right:16px;top:16px;display:flex;gap:8px;flex-wrap:wrap;justify-content:space-between;z-index:10;pointer-events:none}
+        .pill{background:rgba(0,0,0,0.6);backdrop-filter:blur(10px);border:2px solid rgba(255,215,0,0.5);border-radius:40px;padding:8px 14px;font-weight:800;font-size:0.9rem;color:white;text-shadow:0 2px 6px black;box-shadow:0 5px 0 #0a1a12}
+        .pause-btn{position:absolute;right:16px;top:80px;z-index:25;background:rgba(0,0,0,0.6);border:2px solid rgba(255,215,0,0.5);border-radius:40px;padding:8px 16px;font-weight:800;font-size:1rem;color:white;cursor:pointer;box-shadow:0 5px 0 #0a1a12}
+        .touch-controls{position:absolute;bottom:20px;left:0;right:0;display:flex;justify-content:center;gap:20px;z-index:10;pointer-events:none}
+        .ctrl-btn{pointer-events:auto;width:70px;height:70px;border-radius:25px;background:#ffd700;display:flex;align-items:center;justify-content:center;font-size:2.5rem;box-shadow:0 10px 0 #996f00;cursor:pointer;color:#1a1a2e;user-select:none}
+        .ctrl-btn:active{box-shadow:0 4px 0 #664a00;transform:translateY(6px)}
+        @media(min-width:768px){.touch-controls{display:none}}
+        .treasure-chest{position:absolute;right:16px;bottom:100px;width:70px;height:70px;background:linear-gradient(145deg,#8B4513,#654321);border-radius:20px;border:3px solid #ffd700;box-shadow:0 10px 0 #3e2723,inset 0 0 30px gold;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#ffd700;z-index:15;animation:chestGlow 2s infinite;cursor:pointer;pointer-events:auto}
+        .treasure-chest i{font-size:1.8rem}.treasure-chest span{font-size:0.9rem;background:rgba(0,0,0,0.5);padding:2px 6px;border-radius:20px}
+        @keyframes chestGlow{0%,100%{box-shadow:0 10px 0 #3e2723,inset 0 0 30px gold,0 0 20px gold}50%{box-shadow:0 10px 0 #3e2723,inset 0 0 50px gold,0 0 40px gold}}
+        .sos-ottoman-bg{background:linear-gradient(180deg, #1a1a3e 0%, #2d1f3e 30%, #3e2a1f 60%, #2d1f3e 100%)}
+        .sos-parchment{background:linear-gradient(145deg, #d4b896, #c4a67a);border:4px solid #8b6914;border-radius:20px;padding:20px;box-shadow:0 15px 0 #6b4f14,0 20px 40px rgba(0,0,0,0.5),inset 0 0 30px rgba(139,105,20,0.3)}
+        .sos-map-node{width:80px;height:80px;border-radius:20px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:all 0.3s;position:relative;background:rgba(139,105,20,0.3);border:3px solid #8b6914;box-shadow:0 8px 0 #5a3a0a}
+        .sos-map-node:hover:not(.locked){transform:scale(1.1);box-shadow:0 10px 0 #5a3a0a,0 0 20px gold}
+        .sos-map-node.completed{background:rgba(34,197,94,0.4);border-color:#22c55e;box-shadow:0 8px 0 #15803d,0 0 15px #22c55e}
+        .sos-map-node.locked{opacity:0.5;filter:grayscale(0.5)}
+        .sos-map-node i{font-size:1.5rem;color:#ffd700}.sos-map-node.completed i{color:#22c55e}
+        .sos-map-node .node-label{font-size:0.65rem;color:#ffd700;font-weight:bold;text-shadow:0 2px 4px black;text-align:center;line-height:1.2;margin-top:4px}
+        .sos-title-ottoman{font-family:'Georgia',serif;color:#ffd700;text-shadow:0 4px 0 #8b6914,0 8px 20px black;font-size:2.5rem;text-align:center;margin-bottom:10px;letter-spacing:3px}
+        .sos-quest-card{background:rgba(0,0,0,0.7);border:2px solid #8b6914;border-radius:20px;padding:20px;color:white;text-align:center}
+        .fen-boardWrap{background:linear-gradient(180deg,rgba(59,130,246,.08),rgba(15,23,42,.18));border:1px solid rgba(96,165,250,.14);border-radius:14px;padding:8px;flex-shrink:0}
+        #fenBoard{display:grid;gap:2px;background:#0b1220;padding:4px;border-radius:12px}
+        .fen-layout{display:flex;gap:10px;flex:1;min-height:0;padding:10px;align-items:stretch}
+        .fen-info-panel{flex:1;background:rgba(10,15,30,0.85);border:1px solid rgba(0,180,216,0.3);border-radius:14px;padding:12px;overflow-y:auto;color:#e0f2fe;min-width:210px;max-width:285px;display:flex;flex-direction:column;gap:8px}
+        .fen-info-panel h4{color:#00e5ff;font-size:1rem;margin-bottom:4px;text-align:center;border-bottom:1px solid rgba(0,229,255,0.3);padding-bottom:6px}
+        .fen-info-row{display:flex;justify-content:space-between;font-size:0.75rem;padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.06)}
+        .fen-info-row .lbl{color:#94a3b8;font-weight:600}.fen-info-row .val{color:#e0f2fe;font-weight:700;text-align:right}
+        .fen-info-desc{font-size:0.7rem;color:#b0c4de;line-height:1.5;margin-top:4px;background:rgba(0,180,216,0.08);padding:8px;border-radius:8px}
+        .fen-info-tag{display:inline-block;padding:2px 8px;border-radius:12px;font-size:0.65rem;font-weight:700;margin:2px}
+        .tag-metal{background:#ff6b6b33;color:#ff6b6b;border:1px solid #ff6b6b55}
+        .tag-nonmetal{background:#38bdf833;color:#38bdf8;border:1px solid #38bdf855}
+        .tag-noble{background:#ffd70033;color:#ffd700;border:1px solid #ffd70055}
+        .fen-question-bar{color:#f8fafc;font-size:0.9rem;text-align:center;padding:6px;font-weight:700}
+        .fen-controls{display:flex;gap:8px;padding:8px 10px;justify-content:center}
+        .fen-btn{padding:8px 14px;border-radius:10px;cursor:pointer;font-size:0.85rem;font-weight:800;color:white;border:none;box-shadow:0 4px 10px rgba(0,0,0,.2)}
+        .fen-btn.primary{background:linear-gradient(90deg,#2563eb,#38bdf8)}
+        .fen-btn.secondary{background:linear-gradient(90deg,#f97316,#ef4444)}
+        @media(max-width:900px){.fen-layout{flex-direction:column}.fen-info-panel{max-width:100%}.fen-progress-panel{width:100%}}
+        #mathCanvas{display:block;width:100%;height:100%}
+        .math-hud{position:absolute;top:10px;left:10px;right:10px;display:flex;justify-content:space-between;color:white;z-index:10;pointer-events:none;font-weight:bold;font-size:0.9rem;text-shadow:2px 2px 4px black;flex-wrap:wrap;gap:5px}
+        .math-hud span{background:rgba(0,0,0,0.5);padding:5px 12px;border-radius:20px}
+
+        .fen-progress-panel{width:220px;background:rgba(6,12,28,0.78);border:1px solid rgba(148,163,184,.18);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:10px;color:#e0f2fe;box-shadow:inset 0 0 24px rgba(15,23,42,.5)}
+        .fen-progress-panel h4{color:#bae6fd;font-size:.95rem;text-align:center;border-bottom:1px solid rgba(186,230,253,.22);padding-bottom:7px;margin-bottom:2px}
+        .fen-mini-note{font-size:.68rem;color:#94a3b8;text-align:center;line-height:1.35;margin-bottom:2px}
+        .fen-experiment-pool{margin-top:10px;background:linear-gradient(145deg,rgba(15,23,42,.95),rgba(30,41,59,.9));border:1px solid rgba(34,211,238,.45);border-radius:14px;padding:10px;cursor:pointer;box-shadow:0 8px 0 rgba(8,47,73,.55),0 0 18px rgba(34,211,238,.18);transition:.2s;display:flex;align-items:center;gap:10px}
+        .fen-experiment-pool:hover{transform:translateY(-2px);box-shadow:0 10px 0 rgba(8,47,73,.65),0 0 28px rgba(34,211,238,.35)}
+        .fen-pool-icon{width:42px;height:42px;border-radius:14px;background:linear-gradient(145deg,#22d3ee,#6366f1);display:flex;align-items:center;justify-content:center;color:white;font-size:1.35rem;box-shadow:inset 0 2px 8px rgba(255,255,255,.35)}
+        .fen-pool-icon.known{background:linear-gradient(145deg,#22c55e,#14b8a6)}
+        .fen-known-pool{border-color:rgba(34,197,94,.45);box-shadow:0 8px 0 rgba(20,83,45,.55),0 0 18px rgba(34,197,94,.16)}
+        .fen-known-pool:hover{box-shadow:0 10px 0 rgba(20,83,45,.65),0 0 28px rgba(34,197,94,.32)}
+        .fen-pool-title{font-size:.85rem;font-weight:900;color:#e0f2fe;line-height:1.1}.fen-pool-sub{font-size:.66rem;color:#a5f3fc;margin-top:2px}.fen-pool-count{margin-left:auto;background:#f59e0b;color:#111827;font-weight:900;border-radius:999px;min-width:26px;height:26px;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 0 #92400e}.fen-pool-count.known{background:#22c55e;box-shadow:0 3px 0 #15803d;color:white}
+        .fen-review-card{background:rgba(15,23,42,.82);border:1px solid rgba(34,211,238,.28);border-radius:18px;padding:12px;margin:8px 0;text-align:left;box-shadow:0 8px 18px rgba(0,0,0,.25)}
+        .fen-review-card b{color:#67e8f9}.fen-review-card .wrong{color:#fecaca}.fen-review-card .right{color:#bbf7d0}.fen-review-card .note{color:#e0f2fe;font-size:.9rem;line-height:1.45;margin-top:6px;background:rgba(14,165,233,.12);padding:8px;border-radius:12px}
+
+
+        .leader-btn{background:linear-gradient(145deg,#22d3ee,#2563eb);border:none;color:white;font-weight:900;padding:10px 18px;border-radius:30px;cursor:pointer;box-shadow:0 6px 0 #0f3a6b,0 8px 18px rgba(0,0,0,.25);margin-left:10px;}
+        .leader-btn:active{transform:translateY(4px);box-shadow:0 2px 0 #0f3a6b;}
+        .leader-tabs{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin:12px 0;}
+        .leader-tab{border:none;border-radius:22px;padding:8px 12px;font-weight:900;cursor:pointer;background:rgba(255,255,255,.16);color:white;border:1px solid rgba(255,255,255,.22)}
+        .leader-tab.active{background:linear-gradient(145deg,#ffd700,#f97316);color:#1a1a2e;}
+        .leader-list{display:flex;flex-direction:column;gap:8px;margin-top:10px;}
+        .leader-row{display:grid;grid-template-columns:42px 1fr 90px;gap:8px;align-items:center;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.16);border-radius:18px;padding:10px;color:white;text-align:left;}
+        .leader-rank{font-size:1.1rem;font-weight:900;color:#ffd700;text-align:center}.leader-name{font-weight:800}.leader-score{text-align:right;font-weight:900;color:#7dd3fc}.leader-empty{padding:22px;color:#cbd5e1;text-align:center;background:rgba(255,255,255,.08);border-radius:20px}.fen-score-hud{position:absolute;left:50%;top:14px;right:auto;transform:translateX(-50%);z-index:22;background:linear-gradient(145deg,#16a34a,#22c55e);color:white;border:2px solid rgba(220,252,231,.8);box-shadow:0 6px 0 #166534,0 10px 22px rgba(0,0,0,.35);border-radius:30px;padding:7px 14px;font-weight:900;text-shadow:0 2px 4px rgba(0,0,0,.35)}
+
+        /* Türkçe bölümü: üst menü/durdur ve modal butonları daha küçük */
+        #turkishScreen #trBackBtn, #turkishScreen #trPauseBtn{
+            font-size:0.78rem!important;
+            padding:6px 11px!important;
+            border-radius:28px!important;
+        }
+        .tr-small-modal-btn{
+            font-size:0.82rem!important;
+            padding:7px 14px!important;
+            min-width:105px!important;
+            width:auto!important;
+            max-width:155px!important;
+            margin:6px auto!important;
+            display:inline-flex!important;
+            align-items:center!important;
+            justify-content:center!important;
+            box-shadow:0 6px 0 #b26500,0 4px 10px rgba(0,0,0,0.22)!important;
+        }
+        .tr-small-modal-btn:active{box-shadow:0 3px 0 #b26500!important;transform:translateY(4px)!important}
+    </style>
+</head>
+<body>
+<div id="app">
+    <div id="landingScreen" class="screen active"><form id="loginForm" style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;text-align:center;gap:20px;width:100%;"><div class="madz-title">MADZ</div><p class="madz-slogan">Eğlenerek Öğren, Oynayarak Geliş</p><div style="margin-top:30px;width:100%;display:flex;flex-direction:column;align-items:center;gap:20px;"><input type="text" id="playerNameInput" class="input-3d" placeholder="Adını Soyadını Gir" autocomplete="off" inputmode="text" enterkeyhint="go"><button type="submit" id="enterBtn" class="btn-3d"><i class="fas fa-arrow-right"></i> Platforma Gir</button></div></form></div>
+    <div id="courseScreen" class="screen"><div style="display:flex;flex-direction:column;height:100%"><div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap"><h2 style="color:#FFD700;font-size:2.5rem;text-shadow:0 5px 0 #7a4b00">MADZ</h2><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end"><span id="welcomeUserLabel" style="color:white;background:#16213e;padding:10px 20px;border-radius:30px">Merhaba!</span><button id="leaderboardBtn" class="leader-btn"><i class="fas fa-trophy"></i> Sıralamalar</button></div></div><div class="course-grid"><div class="course-card" style="background:linear-gradient(145deg,#e63946,#b71c1c)"><i class="fas fa-flag-checkered"></i><h3>İngilizce</h3><p>🏎️ Kelime Yarışı</p><button class="card-btn" data-course="english">Oyuna Başla</button></div><div class="course-card" style="background:linear-gradient(145deg,#e76f51,#c14c2c)"><i class="fas fa-book-open"></i><h3>Türkçe</h3><p>📚 Kelime Avı</p><button class="card-btn" data-course="turkish">Oyuna Başla</button></div><div class="course-card" style="background:linear-gradient(145deg,#2a9d8f,#1b5e4b)"><i class="fas fa-globe-americas"></i><h3>Sosyal Bilgiler</h3><p>🏛️ Osmanlı</p><button class="card-btn" data-course="social">Oyuna Başla</button></div><div class="course-card" style="background:linear-gradient(145deg,#9c89b8,#5e4b7a)"><i class="fas fa-flask"></i><h3>Fen Bilimleri</h3><p>⚗️ Element Labirenti</p><button class="card-btn" data-course="fen">Oyuna Başla</button></div><div class="course-card" style="background:linear-gradient(145deg,#f4a261,#b86b2a)"><i class="fas fa-calculator"></i><h3>Matematik</h3><p>🧮 Sayıların Gücü</p><button class="card-btn" data-course="math">Oyuna Başla</button></div></div><button id="logoutBtn" style="margin-top:15px;background:transparent;border:2px solid white;color:white;padding:10px;border-radius:30px"><i class="fas fa-sign-out-alt"></i> Çıkış Yap</button></div></div>
+
+    <!-- İNGİLİZCE -->
+    <div id="englishScreen" class="screen" style="padding:0"><button class="back-btn" id="engBackBtn"><i class="fas fa-arrow-left"></i> Menü</button><button class="pause-btn" id="engPauseBtn"><i class="fas fa-pause"></i> Durdur</button><div class="game-container"><canvas id="engCanvas" style="touch-action:none;"></canvas><div class="hud"><div class="pill"><span id="engPlayerName">Oyuncu</span></div><div class="pill" style="background:linear-gradient(145deg,#ff4da6,#ff66c4);border:2px solid #ffd6eb;box-shadow:0 5px 0 #a3125c;color:white;font-size:1rem;">🏆 PUAN: <span id="engScore">0</span></div><div class="pill">📊 <span id="engLevel">Başlangıç</span></div><div class="pill">✅ <span id="engCorrect">0</span>/<span id="engTotal">20</span></div><div class="pill">❤️ <span id="engLives">❤️❤️❤️</span></div><div class="pill">⚡ <span id="engSpeed">3</span></div></div><div class="touch-controls"><div class="ctrl-btn" id="engLeft"><i class="fas fa-arrow-left"></i></div><div class="ctrl-btn" id="engRight"><i class="fas fa-arrow-right"></i></div></div></div></div>
+
+    <!-- TÜRKÇE -->
+    <div id="turkishScreen" class="screen" style="padding:0"><button class="back-btn" id="trBackBtn"><i class="fas fa-arrow-left"></i> Menü</button><button class="pause-btn" id="trPauseBtn"><i class="fas fa-pause"></i> Durdur</button><div class="game-container" style="background:linear-gradient(180deg,#1a1a4e,#2d2d6e)"><canvas id="trCanvas" style="touch-action:none;"></canvas><div class="hud"><div class="pill"><i class="fas fa-user"></i> <span id="trPlayerName">Oyuncu</span></div><div class="pill"><i class="fas fa-star"></i> <span id="trScore">0</span></div><div class="pill"><i class="fas fa-heart" style="color:#ef4444"></i> <span id="trLives">❤️❤️❤️</span></div></div><div class="treasure-chest" id="treasureChest"><i class="fas fa-box-open"></i><span id="learnedCount">0</span></div><div class="touch-controls"><div class="ctrl-btn" id="trLeft"><i class="fas fa-arrow-left"></i></div><div class="ctrl-btn" id="trRight"><i class="fas fa-arrow-right"></i></div></div></div></div>
+
+    <!-- SOSYAL -->
+    <div id="socialScreen" class="screen" style="padding:0"><button class="back-btn" id="sosBackBtn"><i class="fas fa-arrow-left"></i> Menü</button><div class="game-container sos-ottoman-bg" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;overflow-y:auto"><div class="sos-title-ottoman" id="sosTitle">OSMANLI: KAYIP DEFTER</div><div class="sos-parchment" id="sosMapArea" style="width:90%;max-width:650px;min-height:350px;display:flex;flex-wrap:wrap;gap:20px;align-items:center;justify-content:center;padding:25px"></div><div id="sosQuestArea" style="display:none;width:90%;max-width:600px"></div></div></div>
+
+    <!-- FEN BİLİMLERİ (güncellendi) -->
+    <div id="fenScreen" class="screen" style="padding:0"><button class="back-btn" id="fenBackBtn"><i class="fas fa-arrow-left"></i> Menü</button><div class="game-container" style="background:radial-gradient(circle at top, #1e293b 0%, #0f172a 60%);display:flex;flex-direction:column"><div class="fen-score-hud">⭐ Puan: <span id="fenScoreHud">0</span></div><div class="fen-layout"><div class="fen-boardWrap"><div id="fenBoard"></div></div><div class="fen-info-panel" id="fenInfoPanel"><h4>📋 Element Bilgisi</h4><div id="fenInfoContent" style="color:#94a3b8;text-align:center;padding:20px;"><i class="fas fa-atom" style="font-size:2rem;color:#00e5ff;"></i><p style="margin-top:10px;">Bir elemente ulaştığında detaylı bilgiler burada görünecek.</p></div></div><div class="fen-progress-panel"><h4>🧪 Öğrenme Alanı</h4><div class="fen-mini-note">Yanlışların ve doğru bildiklerin burada birikir.</div><div class="fen-experiment-pool" id="fenExperimentPool"><div class="fen-pool-icon"><i class="fas fa-vial"></i></div><div><div class="fen-pool-title">Deney Havuzu</div><div class="fen-pool-sub">Yanlışları incele, tekrar öğren</div></div><div class="fen-pool-count" id="fenPoolCount">0</div></div><div class="fen-experiment-pool fen-known-pool" id="fenKnownPool"><div class="fen-pool-icon known"><i class="fas fa-check-circle"></i></div><div><div class="fen-pool-title">Bildiklerim</div><div class="fen-pool-sub">Doğru cevaplarını tekrar et</div></div><div class="fen-pool-count known" id="fenKnownCount">0</div></div></div></div><div class="fen-question-bar" id="fenQuestion">Başlamak için Oyunu Başlat'a tıkla.</div><div id="fenFeedback" style="min-height:20px;font-weight:700;font-size:0.75rem;line-height:1.4;text-align:center;padding:0 10px;"></div><div class="fen-controls"><button class="fen-btn primary" id="fenStartBtn"><i class="fas fa-play"></i> Oyunu Başlat</button><button class="fen-btn secondary" id="fenRestartBtn"><i class="fas fa-redo"></i> Yeniden Başlat</button></div><div class="touch-controls" id="fenTouchControls" style="position:relative; margin-top:8px; pointer-events:auto;"><div style="display:flex; gap:10px; justify-content:center;"><div class="ctrl-btn" id="fenUp" style="width:60px;height:60px;font-size:2rem;"><i class="fas fa-arrow-up"></i></div></div><div style="display:flex; gap:10px; justify-content:center; margin-top:8px;"><div class="ctrl-btn" id="fenLeft" style="width:60px;height:60px;font-size:2rem;"><i class="fas fa-arrow-left"></i></div><div class="ctrl-btn" id="fenDown" style="width:60px;height:60px;font-size:2rem;"><i class="fas fa-arrow-down"></i></div><div class="ctrl-btn" id="fenRight" style="width:60px;height:60px;font-size:2rem;"><i class="fas fa-arrow-right"></i></div></div></div></div></div>
+
+    <!-- MATEMATİK -->
+    <div id="mathScreen" class="screen" style="padding:0"><button class="back-btn" id="mathBackBtn"><i class="fas fa-arrow-left"></i> Menü</button><div class="game-container" style="background:#1a0533"><canvas id="mathCanvas" style="touch-action:none;"></canvas><div class="math-hud"><span>❤️ <span id="mathLives">5</span></span><span>⭐ <span id="mathScore">0</span></span><span>❓ Kalan: <span id="mathRemain">50</span></span><span>🧮 Sayıların Gücü</span></div><div class="touch-controls" id="mathTouchControls"><div class="ctrl-btn" id="touchLeft"><i class="fas fa-arrow-left"></i></div><div class="ctrl-btn" id="touchJump"><i class="fas fa-arrow-up"></i></div><div class="ctrl-btn" id="touchRight"><i class="fas fa-arrow-right"></i></div></div></div></div>
+</div>
+<div id="modalContainer"></div>
+
+<script>
+(function(){
+    let state={playerName:'',currentScreen:'landing'};
+    const COURSE_LABELS={english:'İngilizce',turkish:'Türkçe',social:'Sosyal Bilgiler',fen:'Fen Bilimleri',math:'Matematik'};
+    function todayKey(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+    function lbKey(){return 'madzLeaderboard_'+todayKey()}
+    function getLeaderboard(){try{return JSON.parse(localStorage.getItem(lbKey())||'{}')}catch(e){return {}}}
+    function setLeaderboard(data){localStorage.setItem(lbKey(),JSON.stringify(data))}
+    function saveScore(course,score,detail){if(!state.playerName||!course||score==null)return;let data=getLeaderboard();if(!data[course])data[course]=[];const name=state.playerName.trim();const now=new Date().toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'});const existing=data[course].find(x=>x.name.toLowerCase()===name.toLowerCase());if(existing){if(score>existing.score){existing.score=score;existing.detail=detail||'';existing.time=now}}else{data[course].push({name,score,detail:detail||'',time:now})}data[course].sort((a,b)=>b.score-a.score);data[course]=data[course].slice(0,20);setLeaderboard(data)}
+    function showLeaderboard(activeCourse='english'){const m=document.getElementById('modalContainer');const data=getLeaderboard();function render(course){const rows=(data[course]||[]).slice(0,10);document.getElementById('leaderContent').innerHTML=rows.length?`<div class="leader-list">${rows.map((r,i)=>`<div class="leader-row"><div class="leader-rank">${i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1}</div><div><div class="leader-name">${r.name}</div><div style="font-size:.75rem;color:#cbd5e1">${r.detail||''} ${r.time?('· '+r.time):''}</div></div><div class="leader-score">${r.score}</div></div>`).join('')}</div>`:`<div class="leader-empty">Bugün bu ders için kayıtlı puan yok.</div>`;document.querySelectorAll('.leader-tab').forEach(b=>b.classList.toggle('active',b.dataset.course===course));}
+    m.innerHTML=`<div class="modal-overlay"><div class="modal-card" style="max-width:760px"><h2 style="color:#ffd700">🏆 Günlük Sıralamalar</h2><p style="color:#cbd5e1;font-size:.9rem">Bu sıralama bu cihazda, bugün için tutulur. Puan aldığın anda tabloya işlenir; aynı öğrenci tekrar oynarsa en yüksek puanı kalır.</p><div class="leader-tabs">${Object.entries(COURSE_LABELS).map(([k,v])=>`<button class="leader-tab" data-course="${k}">${v}</button>`).join('')}</div><div id="leaderContent"></div><button class="btn-3d" id="closeLeaderBtn" style="margin-top:18px">Kapat</button></div></div>`;document.querySelectorAll('.leader-tab').forEach(b=>b.onclick=()=>render(b.dataset.course));document.getElementById('closeLeaderBtn').onclick=()=>m.innerHTML='';render(activeCourse)}
+
+    // ========== VERİLER ==========
+    const ENG_VOCAB={beginner:[["apple","elma"],["book","kitap"],["car","araba"],["dog","köpek"],["cat","kedi"],["house","ev"],["school","okul"],["teacher","öğretmen"],["student","öğrenci"],["mother","anne"],["father","baba"],["brother","erkek kardeş"],["sister","kız kardeş"],["water","su"],["bread","ekmek"],["milk","süt"],["door","kapı"],["window","pencere"],["table","masa"],["chair","sandalye"]],intermediate:[["beautiful","güzel"],["dangerous","tehlikeli"],["expensive","pahalı"],["interesting","ilginç"],["comfortable","rahat"],["delicious","lezzetli"],["important","önemli"],["different","farklı"],["difficult","zor"],["possible","mümkün"],["necessary","gerekli"],["famous","ünlü"],["library","kütüphane"],["hospital","hastane"],["restaurant","restoran"],["mountain","dağ"],["river","nehir"],["forest","orman"],["bridge","köprü"],["building","bina"]],advanced:[["extraordinary","olağanüstü"],["consciousness","bilinç"],["environment","çevre"],["responsibility","sorumluluk"],["entrepreneur","girişimci"],["significant","önemli"],["appropriate","uygun"],["consequence","sonuç"],["negotiation","müzakere"],["phenomenon","fenomen"],["hypothesis","hipotez"],["incredible","inanılmaz"],["necessity","gereklilik"],["particularly","özellikle"],["recommendation","tavsiye"],["sophisticated","sofistike"],["temperature","sıcaklık"],["unbelievable","inanılmaz"],["vulnerable","savunmasız"],["wavelength","dalga boyu"]]};
+    const ENG_LEVELS=['Kolay','Orta','İleri','Çok İleri'];
+    const TR_VOCAB={grade5:[{word:"sözcük",meaning:"Kelime",options:["Cümle","Kelime","Harf","Hece"]},{word:"vatan",meaning:"Yurt",options:["Şehir","Yurt","Millet","Bayrak"]},{word:"özgürlük",meaning:"Bağımsızlık",options:["Tutsaklık","Bağımsızlık","Esaret","Zorunluluk"]},{word:"gelenek",meaning:"Adet",options:["Yenilik","Adet","Moda","Teknoloji"]},{word:"misafir",meaning:"Konuk",options:["Ev sahibi","Konuk","Yabancı","Akraba"]},{word:"acele",meaning:"Çabuk",options:["Yavaş","Çabuk","Sakin","Ağır"]},{word:"armağan",meaning:"Hediye",options:["Ödül","Hediye","Ceza","Borç"]},{word:"yüzyıl",meaning:"Asır",options:["Yıl","Asır","Ay","Hafta"]},{word:"önder",meaning:"Lider",options:["Takipçi","Lider","Yardımcı","Üye"]},{word:"uygarlık",meaning:"Medeniyet",options:["Vahşet","Medeniyet","Köy","Şehir"]},{word:"doğa",meaning:"Tabiat",options:["Şehir","Tabiat","Evren","Dünya"]},{word:"yaşam",meaning:"Hayat",options:["Ölüm","Hayat","Uyku","Rüya"]}],grade6:[{word:"münazara",meaning:"Tartışma",options:["Konuşma","Tartışma","Anlaşma","Susma"]},{word:"mütevazı",meaning:"Alçak gönüllü",options:["Kibirli","Alçak gönüllü","Zengin","Fakir"]},{word:"ihtimal",meaning:"Olasılık",options:["Kesinlik","Olasılık","Gerçek","Yalan"]},{word:"muhayyile",meaning:"Hayal gücü",options:["Gerçek","Hayal gücü","Zeka","Hafıza"]},{word:"muvaffak",meaning:"Başarılı",options:["Başarısız","Başarılı","Şanslı","Çalışkan"]},{word:"müstesna",meaning:"İstisna",options:["Sıradan","İstisna","Normal","Genel"]},{word:"müteşebbis",meaning:"Girişimci",options:["Tembel","Girişimci","Korkak","Çekingen"]},{word:"münzevi",meaning:"Yalnız",options:["Sosyal","Yalnız","Kalabalık","Neşeli"]},{word:"müşfik",meaning:"Şefkatli",options:["Acımasız","Şefkatli","Soğuk","Sert"]},{word:"mütecanis",meaning:"Benzer",options:["Farklı","Benzer","Zıt","Karışık"]},{word:"mütevekkil",meaning:"Güvenen",options:["İsyankar","Güvenen","Şüpheci","Korkak"]},{word:"mütebessim",meaning:"Gülümseyen",options:["Asık","Gülümseyen","Ağlayan","Kızgın"]}],grade7:[{word:"müşkülpesent",meaning:"Zor beğenen",options:["Kolay","Zor beğenen","Dağınık","Düzenli"]},{word:"mütehakkim",meaning:"Baskıcı",options:["Merhametli","Baskıcı","Cömert","Nazik"]},{word:"mütecasir",meaning:"Cesur",options:["Korkak","Cesur","Çekingen","Utangaç"]},{word:"mütefekkir",meaning:"Düşünür",options:["Cahil","Düşünür","Tembel","Hızlı"]},{word:"mütehammil",meaning:"Dayanıklı",options:["Sabırsız","Dayanıklı","Kırılgan","Hassas"]},{word:"müteheyyiç",meaning:"Heyecanlı",options:["Sakin","Heyecanlı","Durgun","Soğukkanlı"]},{word:"mütekabil",meaning:"Karşılıklı",options:["Tek taraflı","Karşılıklı","Ayrı","Bağımsız"]},{word:"mütelevvin",meaning:"Değişken",options:["Sabit","Değişken","Tekdüze","Sade"]},{word:"mütemerrit",meaning:"İnatçı",options:["Uysal","İnatçı","Yumuşak","Sakin"]},{word:"mütenasip",meaning:"Uygun",options:["Uygunsuz","Uygun","Orantısız","Dengesiz"]},{word:"müteşekkir",meaning:"Minnettar",options:["Nankör","Minnettar","Kızgın","Üzgün"]},{word:"müteyakkız",meaning:"Tetikte",options:["Uykulu","Tetikte","Dalgın","Yorgun"]}],grade8:[{word:"müphem",meaning:"Belirsiz",options:["Açık","Belirsiz","Net","Kesin"]},{word:"müşahhas",meaning:"Somut",options:["Soyut","Somut","Karmaşık","Basit"]},{word:"mücerret",meaning:"Soyut",options:["Somut","Soyut","Gerçek","Yalan"]},{word:"mütezayit",meaning:"Artan",options:["Azalan","Artan","Sabit","Durağan"]},{word:"müttefik",meaning:"Birleşik",options:["Ayrı","Birleşik","Düşman","Rakip"]},{word:"müteneffir",meaning:"Nefret eden",options:["Seven","Nefret eden","Hoşlanan","Beğenen"]},{word:"müteşekkil",meaning:"Oluşmuş",options:["Dağınık","Oluşmuş","Bozuk","Eksik"]},{word:"müteharrik",meaning:"Hareketli",options:["Durağan","Hareketli","Sakin","Yavaş"]},{word:"mütedeyyin",meaning:"Dindar",options:["Dinsiz","Dindar","Laik","Ateist"]},{word:"müteaffin",meaning:"Kokuşmuş",options:["Taze","Kokuşmuş","Güzel","Temiz"]},{word:"mütehassis",meaning:"Duygulu",options:["Duygusuz","Duygulu","Soğuk","Sert"]},{word:"mütekait",meaning:"Emekli",options:["Çalışan","Emekli","İşsiz","Öğrenci"]}]};
+    const SOS_CHAPTERS=[{id:1,name:"Kültür ve Miras",icon:"fa-landmark",unlocked:true,completed:false},{id:2,name:"Yönetim ve Devlet",icon:"fa-crown",unlocked:false,completed:false},{id:3,name:"Fetih ve Seferler",icon:"fa-map",unlocked:false,completed:false},{id:4,name:"Ekonomi ve Toplum",icon:"fa-store",unlocked:false,completed:false},{id:5,name:"Yenilik ve Değişim",icon:"fa-tools",unlocked:false,completed:false},{id:6,name:"Genel Tekrar",icon:"fa-scroll",unlocked:false,completed:false}];
+    const SOS_QUESTIONS={1:[{q:"Osmanlı Beyliği hangi yüzyılda kurulmuştur?",opts:["12. yüzyıl","13. yüzyıl","14. yüzyıl","15. yüzyıl"],ans:"13. yüzyıl"},{q:"Osmanlı'nın kurucusu kimdir?",opts:["Orhan Bey","Osman Bey","I. Murad","Yıldırım Bayezid"],ans:"Osman Bey"},{q:"Osmanlı Beyliği nerede kurulmuştur?",opts:["İstanbul","Ankara","Söğüt","Edirne"],ans:"Söğüt"},{q:"Osmanlı'nın kısa sürede büyümesinin sebebi?",opts:["Denizcilik","Uç beyliği olması","Zenginlik","Büyük ordu"],ans:"Uç beyliği olması"},{q:"Osmanlı'da ilk başkent neresidir?",opts:["Edirne","Bursa","İstanbul","Söğüt"],ans:"Bursa"}],2:[{q:"Divan-ı Hümayun nedir?",opts:["Saray","Devlet meclisi","Askeri birlik","Okul"],ans:"Devlet meclisi"},{q:"Sadrazamın görevi nedir?",opts:["Askeri komutan","Padişah vekili","Hakim","Vergi memuru"],ans:"Padişah vekili"},{q:"Yeniçeri Ocağı'nın temel amacı nedir?",opts:["Ticaret","Eğitim","Daimi ordu","Yargı"],ans:"Daimi ordu"},{q:"Kanuni döneminde hangi gelişme yaşanmıştır?",opts:["İstanbul'un fethi","En geniş sınırlar","Cumhuriyet","Lale Devri"],ans:"En geniş sınırlar"},{q:"Osmanlı'da yönetim merkezi neresidir?",opts:["Saray","Medrese","Cami","Han"],ans:"Saray"}],3:[{q:"İstanbul'un fethinin en önemli sonucu?",opts:["Savaş bitti","Orta Çağ kapandı","Ticaret başladı","Nüfus arttı"],ans:"Orta Çağ kapandı"},{q:"Mısır Seferi hangi padişah döneminde?",opts:["Kanuni","Yavuz Sultan Selim","Fatih","II. Bayezid"],ans:"Yavuz Sultan Selim"},{q:"Halifelik Osmanlı'ya ne zaman geçti?",opts:["İstanbul'un fethi","Mısır Seferi","Tanzimat","Lale Devri"],ans:"Mısır Seferi"},{q:"Fetih başarısında en önemli etken?",opts:["Hava","Coğrafi konum","Asker sayısı","Şans"],ans:"Coğrafi konum"},{q:"Kanuni döneminde hangi ada fethedildi?",opts:["Kıbrıs","Rodos","Girit","Malta"],ans:"Rodos"}],4:[{q:"Osmanlı'da bedesten ne işe yarar?",opts:["Hamam","Kıymetli eşya pazarı","Okul","Cami"],ans:"Kıymetli eşya pazarı"},{q:"Ahilik teşkilatı neyle ilgilidir?",opts:["Askerlik","Esnaf ve zanaat","Eğitim","Din"],ans:"Esnaf ve zanaat"},{q:"Medreseler hangi alanda hizmet verir?",opts:["Sağlık","Eğitim","Ticaret","Yönetim"],ans:"Eğitim"},{q:"Osmanlı'da hanlar ne amaçla kullanılırdı?",opts:["Eğitim","Konaklama","İbadet","Yönetim"],ans:"Konaklama"},{q:"Lonca teşkilatı nedir?",opts:["Askeri birlik","Esnaf birliği","Okul","Mahkeme"],ans:"Esnaf birliği"}],5:[{q:"Tanzimat Fermanı hangi padişah döneminde?",opts:["III. Selim","Abdülmecid","II. Mahmud","IV. Murad"],ans:"Abdülmecid"},{q:"Nizam-ı Cedid ordusu kim tarafından kuruldu?",opts:["III. Selim","II. Mahmud","Abdülmecid","Kanuni"],ans:"III. Selim"},{q:"Lale Devri'nde en önemli yenilik?",opts:["Askerlik","Kültür ve sanat","Ticaret","Din"],ans:"Kültür ve sanat"},{q:"Islahat Fermanı ile hangi haklar tanındı?",opts:["Askerlik","Eşit vatandaşlık","Vergi","Eğitim"],ans:"Eşit vatandaşlık"},{q:"Osmanlı'da ilk matbaa ne zaman kuruldu?",opts:["Lale Devri","Tanzimat","Islahat","Meşrutiyet"],ans:"Lale Devri"}],6:[{q:"Osmanlı Devleti hangi savaştan sonra yıkıldı?",opts:["Balkan Savaşı","I. Dünya Savaşı","Kurtuluş Savaşı","Kırım Savaşı"],ans:"I. Dünya Savaşı"},{q:"En uzun süre tahtta kalan padişah?",opts:["Fatih","Kanuni","Yavuz","IV. Murad"],ans:"Kanuni"},{q:"Divan teşkilatı hangi padişah döneminde?",opts:["Osman Bey","Orhan Bey","I. Murad","Fatih"],ans:"Orhan Bey"},{q:"Kapitülasyonlar nedir?",opts:["Vergi","Ticaret ayrıcalığı","Askeri anlaşma","Eğitim sistemi"],ans:"Ticaret ayrıcalığı"},{q:"Osmanlı hangi kıtada toprak kaybetmedi?",opts:["Asya","Avrupa","Afrika","Güney Amerika"],ans:"Güney Amerika"}]};
+    let sosState={completed:[],currentChapter:null,questionIndex:0,score:0,askedQuestions:[]};
+    const ALL_ELEMENTS=[{symbol:"H",name:"Hidrojen",num:1,weight:1.008,group:1,period:1,category:"ametal",props:"Renksiz, kokusuz, havadan hafif gaz.",usage:"Roket yakıtı, amonyak.",info:"Evrendeki en bol element."},{symbol:"He",name:"Helyum",num:2,weight:4.0026,group:18,period:1,category:"soy gaz",props:"Eylemsiz gaz, en düşük kaynama noktası.",usage:"Balon, zeplin.",info:"Balonlarda kullanılır."},{symbol:"Li",name:"Lityum",num:3,weight:6.94,group:1,period:2,category:"metal",props:"En hafif metal, yumuşak.",usage:"Pil, ilaç.",info:"Pillerde kullanılır."},{symbol:"C",name:"Karbon",num:6,weight:12.011,group:14,period:2,category:"ametal",props:"Organik kimyanın temeli.",usage:"Çelik, plastik.",info:"Canlıların temel yapı taşı."},{symbol:"N",name:"Azot",num:7,weight:14.007,group:15,period:2,category:"ametal",props:"Atmosferin %78'i.",usage:"Gübre, patlayıcı.",info:"Havanın %78'ini oluşturur."},{symbol:"O",name:"Oksijen",num:8,weight:15.999,group:16,period:2,category:"ametal",props:"Canlılar için zorunlu.",usage:"Tıp, kaynak.",info:"Solunum için gereklidir."},{symbol:"Na",name:"Sodyum",num:11,weight:22.99,group:1,period:3,category:"metal",props:"Yumuşak, suyla tepkime.",usage:"Sokak lambası, tuz.",info:"Sofra tuzunun parçası."},{symbol:"Mg",name:"Magnezyum",num:12,weight:24.305,group:2,period:3,category:"metal",props:"Hafif, parlak alev.",usage:"Havai fişek, uçak.",info:"Flaşlarda kullanılır."},{symbol:"Al",name:"Alüminyum",num:13,weight:26.982,group:13,period:3,category:"metal",props:"Hafif, dayanıklı.",usage:"Uçak, folyo.",info:"Uçak yapımında kullanılır."},{symbol:"Si",name:"Silisyum",num:14,weight:28.085,group:14,period:3,category:"yarı metal",props:"Yarı iletken.",usage:"Çip, cam.",info:"Bilgisayar çiplerinde bulunur."},{symbol:"P",name:"Fosfor",num:15,weight:30.974,group:15,period:3,category:"ametal",props:"Beyaz, kırmızı formları.",usage:"Gübre, kibrit.",info:"Kibrit yapımında kullanılır."},{symbol:"S",name:"Kükürt",num:16,weight:32.06,group:16,period:3,category:"ametal",props:"Sarı kristal.",usage:"Barut, lastik.",info:"Barut yapımında kullanılır."},{symbol:"Cl",name:"Klor",num:17,weight:35.45,group:17,period:3,category:"ametal",props:"Yeşilimsi zehirli gaz.",usage:"Su arıtma, PVC.",info:"Su arıtımında kullanılır."},{symbol:"K",name:"Potasyum",num:19,weight:39.098,group:1,period:4,category:"metal",props:"Yumuşak, suyla patlayıcı.",usage:"Gübre, sabun.",info:"Muzda bolca bulunur."},{symbol:"Ca",name:"Kalsiyum",num:20,weight:40.078,group:2,period:4,category:"metal",props:"Gümüş-beyaz, sert.",usage:"Çimento, alçı.",info:"Kemiklerin yapısındadır."},{symbol:"Fe",name:"Demir",num:26,weight:55.845,group:8,period:4,category:"metal",props:"En yaygın metal.",usage:"İnşaat, araç.",info:"Kanda oksijen taşır."},{symbol:"Cu",name:"Bakır",num:29,weight:63.546,group:11,period:4,category:"metal",props:"Kırmızımsı, iletken.",usage:"Elektrik kablosu.",info:"Elektrikte kullanılır."},{symbol:"Zn",name:"Çinko",num:30,weight:65.38,group:12,period:4,category:"metal",props:"Korozyona dayanıklı.",usage:"Galvaniz, pil.",info:"Bağışıklık için önemli."},{symbol:"Ag",name:"Gümüş",num:47,weight:107.87,group:11,period:5,category:"metal",props:"En iyi iletken.",usage:"Mücevher, elektronik.",info:"Değerli bir metaldir."},{symbol:"Au",name:"Altın",num:79,weight:196.97,group:11,period:6,category:"metal",props:"En dövülebilir metal.",usage:"Mücevher, yatırım.",info:"Paslanmaz değerli metal."},{symbol:"Hg",name:"Cıva",num:80,weight:200.59,group:12,period:6,category:"metal",props:"Oda sıcaklığında sıvı.",usage:"Termometre (eskiden).",info:"Sıvı olan tek metal."},{symbol:"Pb",name:"Kurşun",num:82,weight:207.2,group:14,period:6,category:"metal",props:"Ağır, zehirli.",usage:"Akü, mermi.",info:"Ağır ve zehirli metal."}];
+    const MAZE=["#############","#...........#","#.#.###.#.#.#","#.#.....#.#.#","#.#.###.#.#.#","#...#...#...#","#.#.#.###.#.#","#...#.....#.#","#.#.#####.#.#","#...........#","#############"];
+    let fenQuestions=[],fenCells=[],fenPlayer={x:1,y:1},fenTargets=[],fenRound=0,fenScore=0,fenLives=999,fenCorrect=0,fenCurrentQ=null,fenStarted=false,fenLocked=false,fenWrongPool=[],fenKnownPool=[];
+    const ALL_MATH_QUESTIONS=[
+        // 1-10: Kolay başlangıç - dört işlem ve temel sayı bilgisi
+        {q:"8 + 7 = ?",opts:["13","15","16","17"],ans:"15",exp:"8’in üzerine 7 eklenirse 15 olur."},
+        {q:"20 - 9 = ?",opts:["9","10","11","12"],ans:"11",exp:"20’den 9 çıkarıldığında 11 kalır."},
+        {q:"6 × 4 = ?",opts:["20","22","24","28"],ans:"24",exp:"6 tane 4 ya da 4 tane 6 toplam 24 eder."},
+        {q:"36 ÷ 6 = ?",opts:["4","5","6","8"],ans:"6",exp:"36, 6 eş parçaya ayrılırsa her parça 6 olur."},
+        {q:"15 + 3 × 4 = ?",opts:["27","72","60","18"],ans:"27",exp:"İşlem önceliğinde önce çarpma yapılır: 3×4=12, 15+12=27."},
+        {q:"(18 ÷ 3) + 5 = ?",opts:["9","10","11","12"],ans:"11",exp:"Önce parantez yapılır: 18÷3=6, sonra 6+5=11."},
+        {q:"Bir sayının yarısı 14 ise sayı kaçtır?",opts:["7","21","28","30"],ans:"28",exp:"Yarısı 14 olan sayı 14×2=28’dir."},
+        {q:"En küçük asal sayı hangisidir?",opts:["0","1","2","3"],ans:"2",exp:"2 yalnızca 1’e ve kendisine bölünen en küçük asal sayıdır."},
+        {q:"6 ve 8’in EKOK’u kaçtır?",opts:["12","18","24","48"],ans:"24",exp:"6 ve 8’in ortak katlarının en küçüğü 24’tür."},
+        {q:"36 ve 48’in EBOB’u kaçtır?",opts:["6","8","12","18"],ans:"12",exp:"36 ve 48’i tam bölen en büyük ortak sayı 12’dir."},
+
+        // 11-20: Geometri temel kavramlar - şekil bilgisi ve çevre/alan
+        {q:"Üçgenin kaç kenarı vardır?",opts:["2","3","4","5"],ans:"3",exp:"Üçgen 3 kenarlı ve 3 köşeli çokgendir."},
+        {q:"Bir üçgenin iç açılar toplamı kaç derecedir?",opts:["90","180","270","360"],ans:"180",exp:"Tüm üçgenlerin iç açılar toplamı 180°’dir."},
+        {q:"Dörtgenin kaç kenarı vardır?",opts:["3","4","5","6"],ans:"4",exp:"4 kenarlı çokgenlere dörtgen denir."},
+        {q:"Beşgenin kaç köşesi vardır?",opts:["4","5","6","7"],ans:"5",exp:"Beşgenin 5 kenarı ve 5 köşesi vardır."},
+        {q:"Altıgenin kaç kenarı vardır?",opts:["4","5","6","8"],ans:"6",exp:"Altıgen, 6 kenarlı çokgendir."},
+        {q:"Yedigen kaç kenarlı bir çokgendir?",opts:["5","6","7","8"],ans:"7",exp:"Yedigenin 7 kenarı ve 7 köşesi vardır."},
+        {q:"Karşılıklı kenarları paralel olan dörtgen hangisidir?",opts:["Üçgen","Paralelkenar","Çember","Beşgen"],ans:"Paralelkenar",exp:"Paralelkenarda karşılıklı kenarlar birbirine paraleldir."},
+        {q:"Yalnız bir çift karşılıklı kenarı paralel olan dörtgen hangisidir?",opts:["Kare","Yamuk","Üçgen","Altıgen"],ans:"Yamuk",exp:"Yamukta en az bir çift karşılıklı kenar paraleldir."},
+        {q:"Çevresi 36 cm olan karenin bir kenarı kaç cm’dir?",opts:["6","8","9","12"],ans:"9",exp:"Karenin 4 eşit kenarı vardır. 36÷4=9."},
+        {q:"Uzun kenarı 8, kısa kenarı 3 olan dikdörtgenin alanı kaçtır?",opts:["11","22","24","32"],ans:"24",exp:"Dikdörtgenin alanı uzun kenar × kısa kenardır. 8×3=24."},
+
+        // 21-30: Kesir, yüzde, ondalık ve oran
+        {q:"0,5 kesir olarak hangisine eşittir?",opts:["1/2","1/3","2/5","5/1"],ans:"1/2",exp:"0,5 yarım demektir, yani 1/2."},
+        {q:"3/4 kesrinin yüzde karşılığı nedir?",opts:["25","50","75","100"],ans:"75",exp:"3/4 = 0,75 = %75."},
+        {q:"12’nin %25’i kaçtır?",opts:["2","3","4","6"],ans:"3",exp:"%25 dörtte birdir. 12÷4=3."},
+        {q:"60’ın %10’u kaçtır?",opts:["3","6","10","16"],ans:"6",exp:"Bir sayının %10’u onu 10’a bölerek bulunur. 60÷10=6."},
+        {q:"2/5 kesrinin ondalık gösterimi nedir?",opts:["0,2","0,4","0,5","2,5"],ans:"0,4",exp:"2÷5 = 0,4 eder."},
+        {q:"1/4 + 1/4 = ?",opts:["1/8","1/4","1/2","1"],ans:"1/2",exp:"Paydalar aynıysa paylar toplanır: 1/4+1/4=2/4=1/2."},
+        {q:"3/5’in 20’deki karşılığı kaçtır?",opts:["8","10","12","15"],ans:"12",exp:"20’nin 5’te biri 4’tür. 3×4=12."},
+        {q:"Bir sınıfta 30 öğrencinin 12’si kızsa kızların oranı nedir?",opts:["2/5","3/5","1/2","4/5"],ans:"2/5",exp:"12/30 sadeleşirse 2/5 olur."},
+        {q:"0,25 yüzde olarak kaçtır?",opts:["%5","%15","%25","%50"],ans:"%25",exp:"0,25 = 25/100 olduğu için %25’tir."},
+        {q:"45’in %20’si kaçtır?",opts:["6","8","9","12"],ans:"9",exp:"%20 beşte birdir. 45÷5=9."},
+
+        // 31-40: Üslü ve köklü sayılar, işlem önceliği
+        {q:"2³ × 2² = ?",opts:["16","32","64","128"],ans:"32",exp:"Aynı tabanlı üslü sayılar çarpılırken üsler toplanır: 2³×2²=2⁵=32."},
+        {q:"5² - 3² = ?",opts:["4","8","16","25"],ans:"16",exp:"5²=25 ve 3²=9 olduğundan 25-9=16."},
+        {q:"10⁰ + 2³ = ?",opts:["7","8","9","10"],ans:"9",exp:"Sıfırıncı kuvvet 1’dir. 10⁰=1 ve 2³=8. Toplam 9."},
+        {q:"3⁴ = ?",opts:["27","64","81","243"],ans:"81",exp:"3×3×3×3 = 81."},
+        {q:"√81 + √49 = ?",opts:["12","14","16","18"],ans:"16",exp:"√81=9 ve √49=7. Toplam 16."},
+        {q:"√144 + √36 = ?",opts:["14","16","18","20"],ans:"18",exp:"√144=12 ve √36=6. Toplam 18."},
+        {q:"√100 kaçtır?",opts:["5","10","20","50"],ans:"10",exp:"10×10=100 olduğu için √100=10."},
+        {q:"8² - 6² = ?",opts:["20","24","28","32"],ans:"28",exp:"8²=64 ve 6²=36. 64-36=28."},
+        {q:"2⁵ ÷ 2² = ?",opts:["2","4","8","16"],ans:"8",exp:"Aynı tabanlı bölmede üsler çıkarılır: 2⁵÷2²=2³=8."},
+        {q:"√225 kaçtır?",opts:["12","13","15","25"],ans:"15",exp:"15×15=225 olduğu için √225=15."},
+
+        // 41-50: Denklemler, problemler ve daha zor karma sorular
+        {q:"3x + 5 = 20 ise x kaçtır?",opts:["3","4","5","6"],ans:"5",exp:"20-5=15, 15÷3=5."},
+        {q:"2x - 7 = 11 ise x kaçtır?",opts:["7","8","9","10"],ans:"9",exp:"11+7=18, 18÷2=9."},
+        {q:"Bir sayının 2 katının 6 fazlası 20 ise sayı kaçtır?",opts:["5","6","7","8"],ans:"7",exp:"2x+6=20, 2x=14, x=7."},
+        {q:"4x + 3 = 27 ise x kaçtır?",opts:["5","6","7","8"],ans:"6",exp:"27-3=24, 24÷4=6."},
+        {q:"5x - 10 = 35 ise x kaçtır?",opts:["7","8","9","10"],ans:"9",exp:"35+10=45, 45÷5=9."},
+        {q:"Bir kalem 8 TL ise 6 kalem kaç TL eder?",opts:["42","46","48","56"],ans:"48",exp:"6 kalem için 6×8=48 TL ödenir."},
+        {q:"Bir araç 3 saatte 180 km giderse saatte kaç km gider?",opts:["40","50","60","90"],ans:"60",exp:"180÷3=60 km/saat."},
+        {q:"Bir dikdörtgenin alanı 48, kısa kenarı 6 ise uzun kenarı kaçtır?",opts:["6","7","8","9"],ans:"8",exp:"Alan = kısa kenar × uzun kenar. 48÷6=8."},
+        {q:"Bir ürün 120 TL’den %25 indirimle satılırsa indirim kaç TL olur?",opts:["20","25","30","40"],ans:"30",exp:"120’nin dörtte biri 30’dur, yani %25 indirim 30 TL’dir."},
+        {q:"Bir sınıfta kızların sayısı erkeklerin sayısının 2 katıdır. Erkekler 9 ise toplam kaç öğrenci vardır?",opts:["18","24","27","30"],ans:"27",exp:"Kızlar 18, erkekler 9 ise toplam 18+9=27 öğrencidir."}
+    ];
+        const MATH_SHAPES=[
+        {name:"Üçgen",sides:3,color:"#22c55e",info:"3 kenarı ve 3 köşesi olan geometrik şekildir.",q:"Üçgenin kaç kenarı vardır?",opts:["2","3","4","5"],ans:"3"},
+        {name:"Kare",sides:4,color:"#facc15",info:"4 eşit kenarı ve 4 dik açısı olan özel dörtgendir.",q:"Karenin tüm kenarları nasıldır?",opts:["Eşit","Farklı","Eğri","Yuvarlak"],ans:"Eşit"},
+        {name:"Dikdörtgen",sides:4,color:"#38bdf8",info:"Karşılıklı kenarları eşit, tüm açıları 90° olan dörtgendir.",q:"Dikdörtgenin tüm açıları kaç derecedir?",opts:["45","60","90","180"],ans:"90"},
+        {name:"Dörtgen",sides:4,color:"#fb7185",info:"4 kenarı ve 4 köşesi olan çokgendir.",q:"Dörtgenin kaç kenarı vardır?",opts:["3","4","5","6"],ans:"4"},
+        {name:"Beşgen",sides:5,color:"#a78bfa",info:"5 kenarı ve 5 köşesi olan çokgendir.",q:"Beşgenin kaç köşesi vardır?",opts:["4","5","6","7"],ans:"5"},
+        {name:"Altıgen",sides:6,color:"#f97316",info:"6 kenarı ve 6 köşesi olan çokgendir.",q:"Altıgenin kaç kenarı vardır?",opts:["5","6","7","8"],ans:"6"},
+        {name:"Çokgen",sides:7,color:"#14b8a6",info:"Doğru parçalarından oluşan kapalı geometrik şekillerin genel adıdır.",q:"Çokgenler hangi çizgilerle oluşur?",opts:["Doğru parçaları","Sadece eğriler","Noktalar","Daireler"],ans:"Doğru parçaları"},
+        {name:"Eşkenar Dörtgen",sides:4,color:"#e879f9",info:"Dört kenarı da eşit uzunlukta olan dörtgendir.",q:"Eşkenar dörtgende hangi özellik vardır?",opts:["Tüm kenarlar eşittir","Hiç köşesi yoktur","3 kenarı vardır","Daire biçimindedir"],ans:"Tüm kenarlar eşittir"},
+        {name:"Paralelkenar",sides:4,color:"#60a5fa",info:"Karşılıklı kenarları paralel ve eşit olan dörtgendir.",q:"Paralelkenarda karşılıklı kenarlar nasıldır?",opts:["Paralel","Eğri","Kesişmez değil","Yuvarlak"],ans:"Paralel"},
+        {name:"Yamuk",sides:4,color:"#f59e0b",info:"En az bir çift karşılıklı kenarı paralel olan dörtgendir.",q:"Yamuk hangi şekil grubundadır?",opts:["Üçgen","Dörtgen","Daire","Küre"],ans:"Dörtgen"}
+    ];
+
+    // ========== EK İÇERİK HAVUZLARI (Her bölümde 50+ içerik hedefi) ==========
+    // İngilizce: Her seviye kendi içinde en az 50 kelimeye çıkarıldı.
+    ENG_VOCAB.beginner.push(
+        ["garden","bahçe"],["family","aile"],["friend","arkadaş"],["city","şehir"],["country","ülke"],["morning","sabah"],["evening","akşam"],["night","gece"],["happy","mutlu"],["sad","üzgün"],
+        ["strong","güçlü"],["fast","hızlı"],["slow","yavaş"],["clean","temiz"],["dirty","kirli"],["small","küçük"],["large","büyük"],["young","genç"],["old","yaşlı"],["new","yeni"],
+        ["road","yol"],["street","sokak"],["market","pazar"],["food","yiyecek"],["fruit","meyve"],["vegetable","sebze"],["sun","güneş"],["moon","ay"],["star","yıldız"],["cloud","bulut"],
+        ["rain","yağmur"],["snow","kar"],["wind","rüzgar"],["computer","bilgisayar"],["phone","telefon"]
+    );
+    ENG_VOCAB.intermediate.push(
+        ["successful","başarılı"],["careful","dikkatli"],["creative","yaratıcı"],["curious","meraklı"],["patient","sabırlı"],["polite","kibar"],["honest","dürüst"],["healthy","sağlıklı"],["crowded","kalabalık"],["quiet","sessiz"],
+        ["noisy","gürültülü"],["ancient","antik"],["modern","modern"],["simple","basit"],["complex","karmaşık"],["solution","çözüm"],["problem","problem"],["decision","karar"],["journey","yolculuk"],["weather","hava durumu"],
+        ["culture","kültür"],["history","tarih"],["science","bilim"],["technology","teknoloji"],["energy","enerji"],["planet","gezegen"],["ocean","okyanus"],["island","ada"],["desert","çöl"],["valley","vadi"],
+        ["purpose","amaç"],["example","örnek"],["reason","neden"],["result","sonuç"],["method","yöntem"]
+    );
+    ENG_VOCAB.advanced.push(
+        ["achievement","başarı"],["adaptation","uyum"],["analysis","analiz"],["communication","iletişim"],["comparison","karşılaştırma"],["contribution","katkı"],["development","gelişim"],["discovery","keşif"],["education","eğitim"],["evidence","kanıt"],
+        ["experiment","deney"],["explanation","açıklama"],["imagination","hayal gücü"],["independence","bağımsızlık"],["innovation","yenilik"],["investigation","araştırma"],["observation","gözlem"],["opportunity","fırsat"],["population","nüfus"],["prediction","tahmin"],
+        ["preparation","hazırlık"],["relationship","ilişki"],["requirement","gereklilik"],["resource","kaynak"],["strategy","strateji"],["sustainable","sürdürülebilir"],["transformation","dönüşüm"],["understanding","anlayış"],["volunteer","gönüllü"],["community","topluluk"],
+        ["challenge","zorluk"],["confidence","öz güven"],["efficiency","verimlilik"],["perspective","bakış açısı"],["creativity","yaratıcılık"]
+    );
+
+    // İngilizce ek güçlendirme: ilerleyen bölümlerde kelime bitmemesi için havuz daha da genişletildi.
+    ENG_VOCAB.beginner.push(
+        ["classroom","sınıf"],["notebook","defter"],["pencil","kalem"],["eraser","silgi"],["ruler","cetvel"],["picture","resim"],["music","müzik"],["game","oyun"],["lesson","ders"],["homework","ödev"],
+        ["breakfast","kahvaltı"],["lunch","öğle yemeği"],["dinner","akşam yemeği"],["kitchen","mutfak"],["bathroom","banyo"],["bedroom","yatak odası"],["garden","bahçe"],["park","park"],["animal","hayvan"],["flower","çiçek"],
+        ["yellow","sarı"],["purple","mor"],["orange","turuncu"],["black","siyah"],["white","beyaz"],["question","soru"],["answer","cevap"],["number","sayı"],["shape","şekil"],["light","ışık"]
+    );
+    ENG_VOCAB.intermediate.push(
+        ["activity","etkinlik"],["advantage","avantaj"],["attention","dikkat"],["behavior","davranış"],["connection","bağlantı"],["direction","yön"],["experience","deneyim"],["favorite","favori"],["important","önemli"],["knowledge","bilgi"],
+        ["language","dil"],["material","malzeme"],["practice","uygulama"],["progress","ilerleme"],["project","proje"],["questionnaire","anket"],["research","araştırma"],["schedule","program"],["subject","konu"],["support","destek"],
+        ["traditional","geleneksel"],["useful","faydalı"],["valuable","değerli"],["various","çeşitli"],["wonderful","harika"],["creative","yaratıcı"],["logical","mantıklı"],["natural","doğal"],["personal","kişisel"],["social","sosyal"]
+    );
+    ENG_VOCAB.advanced.push(
+        ["accessibility","erişilebilirlik"],["collaboration","iş birliği"],["concentration","odaklanma"],["consequence","sonuç"],["determination","kararlılık"],["environmental","çevresel"],["evaluation","değerlendirme"],["flexibility","esneklik"],["implementation","uygulama"],["interpretation","yorumlama"],
+        ["measurement","ölçme"],["motivation","motivasyon"],["organization","organizasyon"],["participation","katılım"],["performance","performans"],["presentation","sunum"],["responsible","sorumlu"],["significance","önem"],["structure","yapı"],["technology","teknoloji"],
+        ["achievement","başarı"],["awareness","farkındalık"],["capability","yeterlik"],["consistency","tutarlılık"],["reflection","yansıtma"],["reliability","güvenirlik"],["sustainability","sürdürülebilirlik"],["visualization","görselleştirme"],["requirement","gereksinim"],["improvement","geliştirme"]
+    );
+
+
+
+    // Final standart İngilizce kelime dizisi: 25 kolay, 25 orta, 25 ileri, 25 çok ileri.
+    const ENG_WORD_SEQUENCE_100 = [["classroom", "sınıf"], ["notebook", "defter"], ["pencil", "kalem"], ["eraser", "silgi"], ["window", "pencere"], ["teacher", "öğretmen"], ["student", "öğrenci"], ["family", "aile"], ["friend", "arkadaş"], ["garden", "bahçe"], ["breakfast", "kahvaltı"], ["library", "kütüphane"], ["weather", "hava durumu"], ["healthy", "sağlıklı"], ["careful", "dikkatli"], ["strong", "güçlü"], ["quiet", "sessiz"], ["crowded", "kalabalık"], ["favorite", "favori"], ["lesson", "ders"], ["homework", "ödev"], ["computer", "bilgisayar"], ["question", "soru"], ["answer", "cevap"], ["different", "farklı"], ["important", "önemli"], ["necessary", "gerekli"], ["comfortable", "rahat"], ["dangerous", "tehlikeli"], ["expensive", "pahalı"], ["delicious", "lezzetli"], ["interesting", "ilginç"], ["successful", "başarılı"], ["creative", "yaratıcı"], ["curious", "meraklı"], ["patient", "sabırlı"], ["polite", "kibar"], ["honest", "dürüst"], ["activity", "etkinlik"], ["project", "proje"], ["culture", "kültür"], ["history", "tarih"], ["science", "bilim"], ["technology", "teknoloji"], ["solution", "çözüm"], ["problem", "problem"], ["decision", "karar"], ["example", "örnek"], ["reason", "neden"], ["result", "sonuç"], ["environment", "çevre"], ["responsibility", "sorumluluk"], ["communication", "iletişim"], ["comparison", "karşılaştırma"], ["development", "gelişim"], ["discovery", "keşif"], ["education", "eğitim"], ["evidence", "kanıt"], ["experiment", "deney"], ["explanation", "açıklama"], ["imagination", "hayal gücü"], ["independence", "bağımsızlık"], ["innovation", "yenilik"], ["investigation", "araştırma"], ["observation", "gözlem"], ["opportunity", "fırsat"], ["population", "nüfus"], ["prediction", "tahmin"], ["preparation", "hazırlık"], ["relationship", "ilişki"], ["resource", "kaynak"], ["strategy", "strateji"], ["sustainable", "sürdürülebilir"], ["transformation", "dönüşüm"], ["community", "topluluk"], ["achievement", "başarı"], ["adaptation", "uyum"], ["analysis", "analiz"], ["contribution", "katkı"], ["consequence", "sonuç"], ["consciousness", "bilinç"], ["entrepreneur", "girişimci"], ["extraordinary", "olağanüstü"], ["hypothesis", "hipotez"], ["phenomenon", "fenomen"], ["significant", "önemli"], ["appropriate", "uygun"], ["negotiation", "müzakere"], ["sophisticated", "gelişmiş"], ["vulnerable", "savunmasız"], ["wavelength", "dalga boyu"], ["accessibility", "erişilebilirlik"], ["collaboration", "iş birliği"], ["concentration", "odaklanma"], ["determination", "kararlılık"], ["evaluation", "değerlendirme"], ["implementation", "uygulama"], ["interpretation", "yorumlama"], ["reliability", "güvenirlik"], ["sustainability", "sürdürülebilirlik"]];
+    const ENG_LEVEL_NAMES_FINAL = ['Kolay (5-6. Sınıf)','Orta (6-7. Sınıf)','İleri (7-8. Sınıf)','Çok İleri (8. Sınıf+)'];
+    const ENG_BASE_SPEED_FINAL = 3.0;
+
+    // Türkçe: Toplam içerik 50 üstüne çıkarıldı.
+    TR_VOCAB.grade5.push(
+        {word:"anı",meaning:"Hatıra",options:["Hatıra","Düşünce","Masal","Şiir"]},{word:"kanıt",meaning:"Delil",options:["Delil","Tahmin","Sebep","Sonuç"]},{word:"amaç",meaning:"Hedef",options:["Hedef","Engel","Yöntem","Kural"]},{word:"sonuç",meaning:"Netice",options:["Sebep","Netice","Başlangıç","Örnek"]},{word:"özen",meaning:"Dikkat",options:["Dikkat","Hız","Korku","Sevinç"]},
+        {word:"tutum",meaning:"Davranış",options:["Davranış","Eşya","Zaman","Mekan"]},{word:"tasarı",meaning:"Plan",options:["Plan","Rüya","Oyun","Ses"]},{word:"katkı",meaning:"Destek",options:["Destek","Zarar","Engel","Eksik"]}
+    );
+    TR_VOCAB.grade6.push(
+        {word:"mukayese",meaning:"Karşılaştırma",options:["Karşılaştırma","Anlaşma","Uyarı","Seçim"]},{word:"izlenim",meaning:"Gözlem sonucu oluşan düşünce",options:["Gözlem sonucu oluşan düşünce","Kesin kanun","Kural","Ödev"]},{word:"varsayım",meaning:"Faraziye",options:["Faraziye","Gerçek","Kanıt","Sonuç"]},{word:"nitelik",meaning:"Özellik",options:["Özellik","Sayı","Yer","Zaman"]},{word:"nicelik",meaning:"Miktar",options:["Miktar","Duygu","Renk","Biçim"]},
+        {word:"kapsam",meaning:"İçerik alanı",options:["İçerik alanı","Kenar","Ses","Araç"]},{word:"yöntem",meaning:"Metot",options:["Metot","Amaç","Sonuç","Örnek"]},{word:"dayanak",meaning:"Temel",options:["Temel","Süs","Ayrıntı","Tesadüf"]}
+    );
+    TR_VOCAB.grade7.push(
+        {word:"çıkarım",meaning:"Sonuç çıkarma",options:["Sonuç çıkarma","Ezberleme","Süsleme","Bekleme"]},{word:"bağlam",meaning:"İçinde bulunulan durum",options:["İçinde bulunulan durum","Tek kelime","Ses","Renk"]},{word:"tutarlılık",meaning:"Çelişkisiz olma",options:["Çelişkisiz olma","Rastgelelik","Belirsizlik","Eksiklik"]},{word:"öznel",meaning:"Kişisel görüşe bağlı",options:["Kişisel görüşe bağlı","Kanıtlanmış","Sayısal","Evrensel"]},{word:"nesnel",meaning:"Kanıtlanabilir",options:["Kanıtlanabilir","Duygusal","Hayali","Kişisel"]},
+        {word:"kanıtlama",meaning:"İspat etme",options:["İspat etme","Gizleme","Tahmin etme","Erteleme"]},{word:"yorum",meaning:"Değerlendirme",options:["Değerlendirme","Noktalama","Sayma","Çizme"]},{word:"eleştiri",meaning:"Değerlendirme yazısı",options:["Değerlendirme yazısı","Masal","Fıkra","Destan"]}
+    );
+    TR_VOCAB.grade8.push(
+        {word:"müteakip",meaning:"Ardından gelen",options:["Ardından gelen","Önceki","Uzak","Sıradan"]},{word:"muktedir",meaning:"Gücü yeten",options:["Gücü yeten","Yorgun","Sessiz","Kararsız"]},{word:"müteakiben",meaning:"Ardından",options:["Ardından","Öncesinde","Asla","Bazen"]},{word:"müspet",meaning:"Olumlu",options:["Olumlu","Olumsuz","Belirsiz","Eksik"]},{word:"menfi",meaning:"Olumsuz",options:["Olumsuz","Olumlu","Parlak","Yeterli"]},
+        {word:"mütecessis",meaning:"Meraklı",options:["Meraklı","Kayıtsız","Tembel","Sert"]},{word:"mütemadiyen",meaning:"Sürekli olarak",options:["Sürekli olarak","Nadiren","Bir kez","Sessizce"]},{word:"müstakil",meaning:"Bağımsız",options:["Bağımsız","Bağımlı","Yakın","Sınırlı"]}
+    );
+
+    // Sosyal Bilgiler: 6 bölüm toplam 50+ soruya çıkarıldı.
+    SOS_QUESTIONS[1].push(
+        {q:"Osmanlı Devleti'nin ilk dönemlerinde sınır boylarında görev yapan beylere ne denirdi?",opts:["Uç beyi","Sadrazam","Kadı","Defterdar"],ans:"Uç beyi"},
+        {q:"Osmanlı'nın kuruluşunda etkili olan gaza ve cihat anlayışı daha çok hangi alanla ilgilidir?",opts:["Fetih politikası","Mimari","Matbaa","Deniz ticareti"],ans:"Fetih politikası"},
+        {q:"Bursa'nın başkent yapılması Osmanlı için neyi güçlendirmiştir?",opts:["Devletleşme sürecini","Matbaayı","Lale Devri'ni","Cumhuriyeti"],ans:"Devletleşme sürecini"},
+        {q:"Osmanlı'nın Balkanlarda ilerlemesini kolaylaştıran uygulamalardan biri hangisidir?",opts:["İskan politikası","Kapitülasyon","Sanayi planı","Matbaa yasağı"],ans:"İskan politikası"}
+    );
+    SOS_QUESTIONS[2].push(
+        {q:"Osmanlı'da adalet işlerinden sorumlu görevli kimdir?",opts:["Kadı","Mimar","Nakkaş","Tüccar"],ans:"Kadı"},
+        {q:"Defterdar hangi alandan sorumludur?",opts:["Maliye","Eğitim","Donanma","Sağlık"],ans:"Maliye"},
+        {q:"Kazasker hangi alanla ilgilidir?",opts:["Yargı ve eğitim","Ticaret","Tarım","Denizcilik"],ans:"Yargı ve eğitim"},
+        {q:"Padişahın mutlak otoritesini temsil eden yönetim anlayışı hangisidir?",opts:["Merkeziyetçilik","Feodalizm","Demokrasi","Federalizm"],ans:"Merkeziyetçilik"}
+    );
+    SOS_QUESTIONS[3].push(
+        {q:"İstanbul'un fethiyle Osmanlı hangi stratejik boğaz üzerindeki kontrolünü güçlendirdi?",opts:["İstanbul Boğazı","Cebelitarık","Süveyş","Hürmüz"],ans:"İstanbul Boğazı"},
+        {q:"Rumeli Hisarı hangi fethin hazırlığında yapılmıştır?",opts:["İstanbul'un fethi","Bursa'nın fethi","Rodos'un fethi","Kıbrıs'ın fethi"],ans:"İstanbul'un fethi"},
+        {q:"Preveze Deniz Zaferi Osmanlı'nın hangi alandaki gücünü göstermiştir?",opts:["Denizcilik","Tarım","Eğitim","Mimari"],ans:"Denizcilik"},
+        {q:"Mohaç Meydan Savaşı hangi padişah dönemindedir?",opts:["Kanuni Sultan Süleyman","Fatih Sultan Mehmet","Osman Bey","III. Selim"],ans:"Kanuni Sultan Süleyman"}
+    );
+    SOS_QUESTIONS[4].push(
+        {q:"Kervansaraylar öncelikle hangi ihtiyacı karşılar?",opts:["Konaklama ve ticaret güvenliği","Askeri eğitim","Mahkeme","Saray yönetimi"],ans:"Konaklama ve ticaret güvenliği"},
+        {q:"Vakıfların Osmanlı toplumundaki temel işlevi nedir?",opts:["Sosyal yardım","Savaş yönetimi","Vergi toplama","Maden arama"],ans:"Sosyal yardım"},
+        {q:"Loncaların kalite ve fiyat denetimi yapması hangi alanla ilgilidir?",opts:["Ekonomik düzen","Askerlik","Dış politika","Deniz savaşları"],ans:"Ekonomik düzen"},
+        {q:"Osmanlı şehirlerinde çarşı ve bedestenler hangi etkinliği destekler?",opts:["Ticaret","Askerlik","Yargı","Tarım"],ans:"Ticaret"}
+    );
+    SOS_QUESTIONS[5].push(
+        {q:"II. Mahmud döneminde kaldırılan askeri ocak hangisidir?",opts:["Yeniçeri Ocağı","Nizam-ı Cedid","Tımarlı sipahi","Donanma"],ans:"Yeniçeri Ocağı"},
+        {q:"Tanzimat Fermanı'nın amaçlarından biri hangisidir?",opts:["Hukukta düzenleme yapmak","Matbaayı yasaklamak","Fetihleri durdurmak","Loncaları kaldırmak"],ans:"Hukukta düzenleme yapmak"},
+        {q:"Lale Devri'nde Avrupa etkisi en çok hangi alanda görülmüştür?",opts:["Kültür ve mimari","Deniz savaşları","Tımar sistemi","İskan politikası"],ans:"Kültür ve mimari"},
+        {q:"Osmanlı'da batılılaşma hareketleri hangi amaçla yapılmıştır?",opts:["Devleti güçlendirmek","Toprakları terk etmek","Ticareti durdurmak","Eğitimi kapatmak"],ans:"Devleti güçlendirmek"}
+    );
+    SOS_QUESTIONS[6].push(
+        {q:"Tımar sistemi hangi iki alanla doğrudan ilişkilidir?",opts:["Tarım ve askerlik","Sanat ve mimari","Denizcilik ve ticaret","Matbaa ve eğitim"],ans:"Tarım ve askerlik"},
+        {q:"Kapitülasyonların zamanla Osmanlı ekonomisine etkisi nasıl olmuştur?",opts:["Olumsuz","Tamamen olumlu","Etkisiz","Sadece askeri"],ans:"Olumsuz"},
+        {q:"Osmanlı'da farklı milletlerin bir arada yaşaması hangi yapıyla açıklanır?",opts:["Millet sistemi","Lonca sistemi","Tımar sistemi","Devşirme sistemi"],ans:"Millet sistemi"},
+        {q:"Devşirme sistemiyle yetiştirilen askerler çoğunlukla hangi ocakta görev alırdı?",opts:["Yeniçeri Ocağı","Lonca","Medrese","Bedesten"],ans:"Yeniçeri Ocağı"}
+    );
+
+    // Matematikte ilk 10 görev çocukça basit olmadan, işlemli ortaokul başlangıcı olacak şekilde güncellendi.
+    ALL_MATH_QUESTIONS.splice(0,10,
+        {q:"18 + 24 ÷ 6 = ?",opts:["7","18","22","42"],ans:"22",exp:"Önce bölme yapılır: 24÷6=4, sonra 18+4=22."},
+        {q:"7 × 8 - 19 = ?",opts:["35","37","39","41"],ans:"37",exp:"7×8=56, 56-19=37."},
+        {q:"96 ÷ 8 + 13 = ?",opts:["23","24","25","26"],ans:"25",exp:"96÷8=12, 12+13=25."},
+        {q:"15 × 4 - 18 ÷ 3 = ?",opts:["48","52","54","60"],ans:"54",exp:"15×4=60, 18÷3=6, 60-6=54."},
+        {q:"3² + 4² = ?",opts:["12","18","25","49"],ans:"25",exp:"3²=9 ve 4²=16. Toplam 25."},
+        {q:"√64 + 5² = ?",opts:["28","31","33","36"],ans:"33",exp:"√64=8 ve 5²=25. Toplam 33."},
+        {q:"Bir sayının 3 katının 4 eksiği 23 ise sayı kaçtır?",opts:["7","8","9","10"],ans:"9",exp:"3x-4=23, 3x=27, x=9."},
+        {q:"Çevresi 52 cm olan karenin bir kenarı kaç cm’dir?",opts:["11","12","13","14"],ans:"13",exp:"Karede 4 eşit kenar vardır. 52÷4=13."},
+        {q:"2/3'ü 18 olan sayı kaçtır?",opts:["24","27","30","36"],ans:"27",exp:"Sayının 1/3’ü 9 ise tamamı 27’dir."},
+        {q:"72’nin %25’i ile 36’nın yarısının toplamı kaçtır?",opts:["30","34","36","40"],ans:"36",exp:"72’nin %25’i 18, 36’nın yarısı 18. Toplam 36."}
+    );
+
+    let mathGame={canvas:null,ctx:null,player:{x:50,y:300,w:40,h:50,vy:0,vx:0,onGround:false,facingRight:true,colorTimer:0},platforms:[],questionBlocks:[],shapeObjects:[],hearts:[],camera:{x:0,y:0},questions:[],questionCursor:0,askedQuestions:0,totalQuestions:30,score:0,lives:5,maxLives:5,combo:0,paused:false,gameStarted:false,keys:{},particles:[],stars:[],touchLeft:false,touchRight:false,touchJump:false,learnedShapes:{},currentWorldWidth:0,interactionCooldown:0,lastInteractionX:-999,lastInteractionType:''};
+
+    function showScreen(id){
+        document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+        document.getElementById(id+'Screen').classList.add('active');
+        state.currentScreen = id;
+        if(id==='math') startMathGame();
+        if(id==='fen') startFenGame();
+    }
+    function handleLogin(){const n=document.getElementById('playerNameInput').value.trim();if(n.length<2){alert('Lütfen adınızı girin!');return}state.playerName=n;document.getElementById('welcomeUserLabel').innerText=`Merhaba, ${n}!`;showScreen('course');}
+    document.getElementById('loginForm').addEventListener('submit',function(e){e.preventDefault();handleLogin();});
+    document.getElementById('enterBtn').addEventListener('click',handleLogin);
+    document.getElementById('logoutBtn').addEventListener('click',()=>showScreen('landing'));
+    document.getElementById('leaderboardBtn').addEventListener('click',()=>showLeaderboard('english'));
+    function showHowToPlayModal(courseType){const texts={english:"🏎️ İngilizce Kelime Yarışı: Akan kutulardaki kelimenin Türkçesini ya da İngilizcesini yaz. Doğru cevapla hızlan, yanlış yaparsan yavaşla. Tüm kelimeleri bitir, seviye atla!",turkish:"📚 Türkçe Kelime Avı: Yukarıdan düşen balonlardaki kelimelerin anlamını seç. Doğru bildikçe kelimeler sandığına ışınlansın!",social:"🏛️ Osmanlı: Tarih sorularını çöz, bölümleri tamamla. Haritadaki düğümleri sırayla aç, kayıp defteri bul!",fen:"⚗️ Element Labirenti: Labirentte gez, sorulan elementi bul. Doğru yapınca puan kazan, yanlış yapınca yeni soruya geç!",math:"🧮 Sayıların Gücü: Platform oyununda ilerle, matematik kutularını topla. Soruları doğru cevapla, kalpleri toplayarak canını koru!"};const colors={english:"linear-gradient(145deg, #e63946, #b71c1c)",turkish:"linear-gradient(145deg, #e76f51, #c14c2c)",social:"linear-gradient(145deg, #2a9d8f, #1b5e4b)",fen:"linear-gradient(145deg, #9c89b8, #5e4b7a)",math:"linear-gradient(145deg, #f4a261, #b86b2a)"};const titles={english:"İngilizce - Kelime Yarışı",turkish:"Türkçe - Kelime Avı",social:"Sosyal Bilgiler - Osmanlı",fen:"Fen Bilimleri - Element Labirenti",math:"Matematik - Sayıların Gücü"};const m=document.getElementById('modalContainer');m.innerHTML=`<div class="modal-overlay"><div class="modal-card" style="background:${colors[courseType]}; border:3px solid white;"><h2 style="color:white; text-shadow:0 3px 0 rgba(0,0,0,0.3);">${titles[courseType]}</h2><p style="color:white; font-size:1.1rem; margin:20px 0;">${texts[courseType]}</p><div style="display:flex;gap:12px;justify-content:center;align-items:center;flex-wrap:wrap;"><button class="btn-3d" id="startHowGameBtn">🚀 Oyuna Başla</button><button class="btn-3d" id="closeHowGameBtn" style="background:linear-gradient(145deg,#f8fafc,#cbd5e1);box-shadow:0 8px 0 #64748b;color:#1a1a2e;">Kapat</button></div></div></div>`;document.getElementById('startHowGameBtn').addEventListener('click',function(){m.innerHTML='';if(courseType==='english')startEnglish();else if(courseType==='turkish')startTurkish();else if(courseType==='social')startSocial();else if(courseType==='fen')showScreen('fen');else if(courseType==='math')showScreen('math');});document.getElementById('closeHowGameBtn').addEventListener('click',function(){m.innerHTML='';});}
+    document.querySelectorAll('[data-course]').forEach(b=>{b.addEventListener('click',()=>{if(b.classList.contains('disabled'))return;const c=b.dataset.course;showHowToPlayModal(c);});});
+    function shuffleArr(a){const arr=[...a];for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]]}return arr}
+    function playSound(f){try{const a=new(window.AudioContext||window.webkitAudioContext)(),o=a.createOscillator(),g=a.createGain();o.connect(g);g.connect(a.destination);o.frequency.value=f;g.gain.setValueAtTime(0.08,a.currentTime);g.gain.exponentialRampToValueAtTime(0.01,a.currentTime+0.1);o.start();o.stop(a.currentTime+0.1);}catch(e){}}
+    CanvasRenderingContext2D.prototype.roundRect=function(x,y,w,h,r){if(w<2*r)r=w/2;if(h<2*r)r=h/2;this.moveTo(x+r,y);this.lineTo(x+w-r,y);this.quadraticCurveTo(x+w,y,x+w,y+r);this.lineTo(x+w,y+h-r);this.quadraticCurveTo(x+w,y+h,x+w-r,y+h);this.lineTo(x+r,y+h);this.quadraticCurveTo(x,y+h,x,y+h-r);this.lineTo(x,y+r);this.quadraticCurveTo(x,y,x+r,y);return this};
+
+    // ========== İNGİLİZCE (aynı) ==========
+    let engState={active:false,paused:false,levelIndex:0,remainingWords:[],score:0,correct:0,answered:0,lives:3,correctStreak:0,speed:ENG_BASE_SPEED_FINAL,roadOffset:0,nextTimer:0,boxes:[],canvas:null,ctx:null,carLane:1,lastLane:-1,isModalOpen:false};
+    const engPlayer={x:0,y:0,w:70,h:120,targetX:0},engKeys={left:false,right:false};
+    let engLoopStarted=false;
+    function startEnglish(){
+        engState={active:true,paused:false,levelIndex:0,remainingWords:[...ENG_WORD_SEQUENCE_100],score:0,correct:0,answered:0,lives:3,correctStreak:0,speed:ENG_BASE_SPEED_FINAL,roadOffset:0,nextTimer:70,boxes:[],canvas:document.getElementById('engCanvas'),ctx:null,carLane:1,lastLane:-1,isModalOpen:false};
+        engState.ctx=engState.canvas.getContext('2d');
+        document.getElementById('engPlayerName').innerText=state.playerName;
+        document.getElementById('engTotal').innerText=ENG_WORD_SEQUENCE_100.length;
+        updateEngHUD();
+        showScreen('english');
+        resizeEngCanvas();
+        if(!engLoopStarted){
+            engLoopStarted=true;
+            engGameLoop();
+        }
+    }
+    function updateEngHUD(){
+        const answered=engState.answered||0;
+        const levelIndex=Math.min(3,Math.floor(Math.min(answered,99)/25));
+        engState.levelIndex=levelIndex;
+        document.getElementById('engScore').innerText=engState.score;
+        document.getElementById('engCorrect').innerText=engState.correct;
+        document.getElementById('engLevel').innerText=ENG_LEVEL_NAMES_FINAL[levelIndex];
+        document.getElementById('engSpeed').innerText=engState.speed.toFixed(1);
+        document.getElementById('engLives').innerHTML='❤️'.repeat(engState.lives)+'♡'.repeat(3-engState.lives);
+        document.getElementById('engTotal').innerText=ENG_WORD_SEQUENCE_100.length;
+    }
+    function resizeEngCanvas(){const c=engState.canvas;c.width=c.parentElement.clientWidth;c.height=c.parentElement.clientHeight;engPlayer.w=Math.max(60,c.width*0.08);engPlayer.h=engPlayer.w*1.7;engPlayer.x=c.width/2-engPlayer.w/2;engPlayer.y=c.height-engPlayer.h-20;engPlayer.targetX=engPlayer.x}
+    function spawnEngBox(){
+        if(engState.remainingWords.length===0)return;
+        const word=engState.remainingWords.shift();
+        const se=Math.random()<0.5;
+        const dw=se?word[0]:word[1];
+        const ca=se?word[1]:word[0];
+        const lanes=3,roadW=engState.canvas.width*0.6,roadX=engState.canvas.width/2-roadW/2,laneW=roadW/lanes;
+        let lane=Math.floor(Math.random()*lanes);
+        if(typeof engState.lastLane==='number' && engState.lastLane===lane){
+            lane=(lane+1+Math.floor(Math.random()*(lanes-1)))%lanes;
+        }
+        engState.lastLane=lane;
+        engState.boxes.push({x:roadX+lane*laneW+laneW*0.15,y:-80,w:laneW*0.68,h:60,displayWord:dw,correctAnswer:ca,fullWord:word,showEnglish:se,pulse:Math.random()*Math.PI*2});
+    }
+    function showEngModal(box){
+        engState.paused=true;
+        engState.isModalOpen=true;
+        const qt=box.showEnglish?'Türkçesi nedir?':'İngilizcesi nedir?';
+        const m=document.getElementById('modalContainer');
+        m.innerHTML=`<div class="modal-overlay"><div class="modal-card"><h3>${qt}</h3><div style="font-size:2.5rem;margin:10px 0;color:#FFD700">${box.displayWord}</div><input id="engAnswer" class="modal-input" placeholder="Cevabı yaz..." autocomplete="off"><button id="engSubmit" class="btn-3d">Cevapla</button><div id="engFeedback" style="margin-top:15px"></div></div></div>`;
+        const input=document.getElementById('engAnswer');
+        input.focus();
+        let answered=false;
+        const normalize=s=>s.trim().toLowerCase().replace(/[ığüşöç]/g,m=>({ı:'i',ğ:'g',ü:'u',ş:'s',ö:'o',ç:'c'}[m]));
+        const handle=()=>{
+            if(answered)return;
+            answered=true;
+            engState.answered=(engState.answered||0)+1;
+            const user=normalize(input.value);
+            const correct=normalize(box.correctAnswer);
+            const fb=document.getElementById('engFeedback');
+            if(user===correct){
+                playSound(800);
+                engState.score+=20;
+                engState.correct++;
+                engState.correctStreak=(engState.correctStreak||0)+1;
+                if(engState.correctStreak>0 && engState.correctStreak%5===0 && engState.lives<3){engState.lives++; playSound(950);}
+                saveScore('english',engState.score,`Doğru: ${engState.correct} / ${ENG_WORD_SEQUENCE_100.length}`);
+                fb.innerHTML='✅ Doğru!';
+                fb.style.color='#bbf7d0';
+            }else{
+                playSound(300);
+                engState.lives--;
+                engState.correctStreak=0;
+                fb.innerHTML=`❌ Yanlış! Doğrusu: ${box.correctAnswer}`;
+                fb.style.color='#fecaca';
+            }
+            engState.speed=ENG_BASE_SPEED_FINAL;
+            updateEngHUD();
+            setTimeout(()=>{
+                m.innerHTML='';
+                engState.paused=false;
+                engState.isModalOpen=false;
+                if(engState.lives<=0)engGameOver(false);
+                else if(engState.answered>=ENG_WORD_SEQUENCE_100.length)engGameOver(true);
+            },1600);
+        };
+        document.getElementById('engSubmit').onclick=handle;
+        input.onkeypress=e=>{if(e.key==='Enter')handle()};
+    }
+    function engLevelUp(){
+        engGameOver(true);
+    }
+    function engGameOver(win){engState.active=false;saveScore('english',engState.score,`Doğru: ${engState.correct}`);const m=document.getElementById('modalContainer');m.innerHTML=`<div class="modal-overlay"><div class="modal-card"><h2>${win?'🏆 Tebrikler!':'🏁 Bitti'}</h2><p>Puan: ${engState.score} | Doğru: ${engState.correct}</p><button class="btn-3d" id="engRestart">Tekrar</button><button class="btn-3d" id="engMenu">Menü</button></div></div>`;document.getElementById('engRestart').onclick=()=>{m.innerHTML='';startEnglish()};document.getElementById('engMenu').onclick=()=>{m.innerHTML='';showScreen('course')}}
+    document.addEventListener('keydown',e=>{if(!engState.active||engState.isModalOpen||engState.paused)return;if(e.key==='ArrowLeft'||e.key==='a'){e.preventDefault();engKeys.left=true}if(e.key==='ArrowRight'||e.key==='d'){e.preventDefault();engKeys.right=true}});document.addEventListener('keyup',e=>{if(e.key==='ArrowLeft'||e.key==='a')engKeys.left=false;if(e.key==='ArrowRight'||e.key==='d')engKeys.right=false});
+    function engUpdate(){
+        if(!engState.active||engState.paused)return;
+        engState.speed=ENG_BASE_SPEED_FINAL;
+        const move=Math.max(8,engState.canvas.width*0.014);
+        if(engKeys.left)engPlayer.targetX-=move;
+        if(engKeys.right)engPlayer.targetX+=move;
+        const roadW=engState.canvas.width*0.6,roadX=engState.canvas.width/2-roadW/2;
+        engPlayer.targetX=Math.max(roadX+10,Math.min(engPlayer.targetX,roadX+roadW-engPlayer.w-10));
+        engPlayer.x+=(engPlayer.targetX-engPlayer.x)*0.28;
+        engState.roadOffset+=engState.speed*1.0;
+        engState.nextTimer--;
+        if(engState.nextTimer<=0&&engState.remainingWords.length>0){
+            spawnEngBox();
+            engState.nextTimer=96;
+        }
+        for(let i=engState.boxes.length-1;i>=0;i--){
+            const b=engState.boxes[i];
+            b.y+=engState.speed*1.0;
+            if(b.x<engPlayer.x+engPlayer.w&&b.x+b.w>engPlayer.x&&b.y<engPlayer.y+engPlayer.h&&b.y+b.h>engPlayer.y){
+                showEngModal(b);
+                engState.boxes.splice(i,1);
+                return;
+            }
+            if(b.y>engState.canvas.height+80){
+                engState.remainingWords.unshift(b.fullWord);
+                engState.boxes.splice(i,1);
+            }
+        }
+    }
+    function drawEngWordBox(ctx,b){
+        const pulse=Math.sin(b.pulse)*3;
+        const x=b.x,y=b.y+pulse,w=b.w,h=b.h;
+        ctx.save();
+        ctx.shadowColor='rgba(0,0,0,0.38)';
+        ctx.shadowBlur=18;
+        ctx.shadowOffsetY=8;
+        const glass=ctx.createLinearGradient(x,y,x,y+h);
+        glass.addColorStop(0,'rgba(255,255,255,0.96)');
+        glass.addColorStop(0.18,'rgba(255,240,252,0.96)');
+        glass.addColorStop(0.62,'rgba(244,114,182,0.94)');
+        glass.addColorStop(1,'rgba(190,24,93,0.98)');
+        ctx.fillStyle=glass;
+        ctx.beginPath();
+        ctx.roundRect(x,y,w,h,Math.min(18,w*0.18));
+        ctx.fill();
+        ctx.shadowBlur=0;
+        const rim=ctx.createLinearGradient(x,y,x+w,y+h);
+        rim.addColorStop(0,'rgba(255,255,255,0.85)');
+        rim.addColorStop(0.5,'rgba(255,215,0,0.75)');
+        rim.addColorStop(1,'rgba(255,255,255,0.55)');
+        ctx.strokeStyle=rim;
+        ctx.lineWidth=Math.max(2,w*0.035);
+        ctx.stroke();
+        const topShine=ctx.createLinearGradient(x,y,x,y+h*0.55);
+        topShine.addColorStop(0,'rgba(255,255,255,0.72)');
+        topShine.addColorStop(1,'rgba(255,255,255,0)');
+        ctx.fillStyle=topShine;
+        ctx.beginPath();
+        ctx.roundRect(x+w*0.08,y+h*0.08,w*0.84,h*0.24,Math.min(14,w*0.12));
+        ctx.fill();
+        ctx.fillStyle='rgba(0,0,0,0.17)';
+        ctx.beginPath();
+        ctx.roundRect(x+w*0.09,y+h*0.22,w*0.82,h*0.58,Math.min(14,w*0.12));
+        ctx.fill();
+        ctx.fillStyle='#fff';
+        ctx.font=`900 ${Math.max(13,w*0.17)}px Poppins`;
+        ctx.textAlign='center';
+        ctx.textBaseline='middle';
+        ctx.shadowColor='rgba(0,0,0,0.5)';
+        ctx.shadowBlur=4;
+        ctx.fillText(b.displayWord,x+w/2,y+h*0.52);
+        ctx.restore();
+        b.pulse+=0.055;
+    }
+    function engDraw(){
+        const c=engState.canvas,ctx=engState.ctx,w=c.width,h=c.height;
+        const sky=ctx.createLinearGradient(0,0,0,h);
+        sky.addColorStop(0,'#5b21b6');
+        sky.addColorStop(0.42,'#0284c7');
+        sky.addColorStop(1,'#f59e0b');
+        ctx.fillStyle=sky;
+        ctx.fillRect(0,0,w,h);
+        ctx.save();
+        ctx.globalAlpha=0.18;
+        for(let i=0;i<12;i++){
+            ctx.fillStyle='#ffffff';
+            ctx.beginPath();
+            ctx.ellipse((i*137-engState.roadOffset*0.12)%(w+180)-90,70+(i%4)*42,55,14,0,0,Math.PI*2);
+            ctx.fill();
+        }
+        ctx.restore();
+        const roadW=w*0.6,roadX=w/2-roadW/2;
+        const roadGrad=ctx.createLinearGradient(roadX,0,roadX+roadW,0);
+        roadGrad.addColorStop(0,'#111827');
+        roadGrad.addColorStop(0.18,'#334155');
+        roadGrad.addColorStop(0.5,'#1f2937');
+        roadGrad.addColorStop(0.82,'#334155');
+        roadGrad.addColorStop(1,'#111827');
+        ctx.fillStyle=roadGrad;
+        ctx.beginPath();
+        ctx.roundRect(roadX,0,roadW,h,20);
+        ctx.fill();
+        ctx.fillStyle='rgba(255,255,255,0.06)';
+        for(let i=0;i<16;i++){
+            const yy=(i*70+(engState.roadOffset*1.5)%70)-70;
+            ctx.fillRect(roadX+roadW*0.04,yy,roadW*0.92,2);
+        }
+        ctx.strokeStyle='rgba(255,255,255,0.86)';
+        ctx.lineWidth=4;
+        ctx.setLineDash([]);
+        ctx.beginPath();ctx.moveTo(roadX+10,0);ctx.lineTo(roadX+10,h);ctx.stroke();
+        ctx.beginPath();ctx.moveTo(roadX+roadW-10,0);ctx.lineTo(roadX+roadW-10,h);ctx.stroke();
+        const lanes=3,laneW=roadW/lanes;
+        ctx.strokeStyle='rgba(255,255,255,0.65)';
+        ctx.lineWidth=5;
+        ctx.setLineDash([28,24]);
+        for(let i=1;i<lanes;i++){
+            ctx.beginPath();
+            ctx.moveTo(roadX+i*laneW,-60+(engState.roadOffset%52));
+            ctx.lineTo(roadX+i*laneW,h+80);
+            ctx.stroke();
+        }
+        ctx.setLineDash([]);
+        engState.boxes.forEach(b=>drawEngWordBox(ctx,b));
+        drawEngCar(ctx,engPlayer.x,engPlayer.y,engPlayer.w,engPlayer.h);
+    }
+    function drawEngCar(ctx,px,py,pw,ph){
+        ctx.save();
+        const cx=px+pw/2;
+        // Daha gerçekçi, üstten görünen spor araba gölgesi
+        ctx.fillStyle='rgba(0,0,0,0.42)';
+        ctx.shadowColor='rgba(0,0,0,0.55)';
+        ctx.shadowBlur=20;
+        ctx.beginPath();
+        ctx.ellipse(cx,py+ph*0.93,pw*0.46,ph*0.12,0,0,Math.PI*2);
+        ctx.fill();
+        ctx.shadowBlur=0;
+
+        const body=ctx.createLinearGradient(px,py,px+pw,py+ph);
+        body.addColorStop(0,'#ff7a7a');
+        body.addColorStop(0.18,'#ef233c');
+        body.addColorStop(0.55,'#c1121f');
+        body.addColorStop(1,'#6b0f1a');
+        ctx.fillStyle=body;
+        ctx.beginPath();
+        ctx.moveTo(cx,py+ph*0.03);
+        ctx.bezierCurveTo(px+pw*0.76,py+ph*0.08,px+pw*0.93,py+ph*0.28,px+pw*0.95,py+ph*0.55);
+        ctx.bezierCurveTo(px+pw*0.98,py+ph*0.78,px+pw*0.82,py+ph*0.94,cx,py+ph*0.98);
+        ctx.bezierCurveTo(px+pw*0.18,py+ph*0.94,px+pw*0.02,py+ph*0.78,px+pw*0.05,py+ph*0.55);
+        ctx.bezierCurveTo(px+pw*0.07,py+ph*0.28,px+pw*0.24,py+ph*0.08,cx,py+ph*0.03);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle='rgba(255,255,255,0.28)';
+        ctx.lineWidth=Math.max(1.2,pw*0.018);
+        ctx.stroke();
+
+        // Yan çamurluklar ve lastik gölgeleri
+        ctx.fillStyle='rgba(15,23,42,0.92)';
+        ctx.beginPath();ctx.roundRect(px+pw*0.02,py+ph*0.38,pw*0.15,ph*0.25,pw*0.05);ctx.fill();
+        ctx.beginPath();ctx.roundRect(px+pw*0.83,py+ph*0.38,pw*0.15,ph*0.25,pw*0.05);ctx.fill();
+        ctx.beginPath();ctx.roundRect(px+pw*0.03,py+ph*0.68,pw*0.14,ph*0.22,pw*0.05);ctx.fill();
+        ctx.beginPath();ctx.roundRect(px+pw*0.83,py+ph*0.68,pw*0.14,ph*0.22,pw*0.05);ctx.fill();
+
+        // Kaput ve tavan camı
+        const glass=ctx.createLinearGradient(px,py+ph*0.12,px,py+ph*0.58);
+        glass.addColorStop(0,'rgba(224,251,255,0.98)');
+        glass.addColorStop(0.45,'rgba(56,189,248,0.9)');
+        glass.addColorStop(1,'rgba(8,47,73,0.95)');
+        ctx.fillStyle=glass;
+        ctx.beginPath();
+        ctx.moveTo(cx,py+ph*0.16);
+        ctx.bezierCurveTo(px+pw*0.66,py+ph*0.18,px+pw*0.72,py+ph*0.30,px+pw*0.68,py+ph*0.43);
+        ctx.bezierCurveTo(px+pw*0.59,py+ph*0.50,px+pw*0.41,py+ph*0.50,px+pw*0.32,py+ph*0.43);
+        ctx.bezierCurveTo(px+pw*0.28,py+ph*0.30,px+pw*0.34,py+ph*0.18,cx,py+ph*0.16);
+        ctx.closePath();ctx.fill();
+        ctx.strokeStyle='rgba(255,255,255,0.52)';ctx.lineWidth=Math.max(1.3,pw*0.02);ctx.stroke();
+        ctx.fillStyle='rgba(255,255,255,0.42)';
+        ctx.beginPath();ctx.ellipse(px+pw*0.43,py+ph*0.25,pw*0.07,ph*0.025,-0.4,0,Math.PI*2);ctx.fill();
+
+        // Orta kaput çizgisi ve hava kanalları
+        ctx.strokeStyle='rgba(80,0,8,0.45)';ctx.lineWidth=Math.max(1,pw*0.018);
+        ctx.beginPath();ctx.moveTo(cx,py+ph*0.48);ctx.lineTo(cx,py+ph*0.82);ctx.stroke();
+        ctx.fillStyle='rgba(20,20,30,0.35)';
+        ctx.beginPath();ctx.roundRect(px+pw*0.28,py+ph*0.58,pw*0.12,ph*0.035,pw*0.02);ctx.fill();
+        ctx.beginPath();ctx.roundRect(px+pw*0.60,py+ph*0.58,pw*0.12,ph*0.035,pw*0.02);ctx.fill();
+
+        // Farlar ve ışık yansıması
+        ctx.shadowColor='rgba(255,246,170,0.9)';ctx.shadowBlur=12;
+        ctx.fillStyle='#fff6a3';
+        ctx.beginPath();ctx.ellipse(px+pw*0.28,py+ph*0.80,pw*0.115,ph*0.045,-0.2,0,Math.PI*2);ctx.fill();
+        ctx.beginPath();ctx.ellipse(px+pw*0.72,py+ph*0.80,pw*0.115,ph*0.045,0.2,0,Math.PI*2);ctx.fill();
+        ctx.shadowBlur=0;
+        const lampGlow=ctx.createLinearGradient(px,py+ph*0.82,px,py+ph*1.08);
+        lampGlow.addColorStop(0,'rgba(255,246,170,0.35)');lampGlow.addColorStop(1,'rgba(255,246,170,0)');
+        ctx.fillStyle=lampGlow;
+        ctx.beginPath();ctx.moveTo(px+pw*0.18,py+ph*0.82);ctx.lineTo(px+pw*0.39,py+ph*1.08);ctx.lineTo(px+pw*0.30,py+ph*0.82);ctx.closePath();ctx.fill();
+        ctx.beginPath();ctx.moveTo(px+pw*0.82,py+ph*0.82);ctx.lineTo(px+pw*0.61,py+ph*1.08);ctx.lineTo(px+pw*0.70,py+ph*0.82);ctx.closePath();ctx.fill();
+
+        // Tampon, plaka ve küçük MADZ logosu
+        ctx.fillStyle='rgba(17,24,39,0.8)';ctx.beginPath();ctx.roundRect(px+pw*0.24,py+ph*0.88,pw*0.52,ph*0.075,pw*0.04);ctx.fill();
+        ctx.fillStyle='#f8fafc';ctx.beginPath();ctx.roundRect(px+pw*0.39,py+ph*0.895,pw*0.22,ph*0.04,pw*0.015);ctx.fill();
+        ctx.fillStyle='#111827';ctx.font=`900 ${Math.max(5,pw*0.075)}px Poppins`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('MADZ',cx,py+ph*0.915);
+        ctx.fillStyle='#ffd700';ctx.beginPath();ctx.arc(cx,py+ph*0.66,Math.max(3,pw*0.052),0,Math.PI*2);ctx.fill();
+        ctx.fillStyle='#7f1d1d';ctx.font=`900 ${Math.max(7,pw*0.12)}px Poppins`;ctx.fillText('M',cx,py+ph*0.66);
+        ctx.restore();
+    }
+    function engGameLoop(){if(state.currentScreen==='english'){engUpdate();engDraw()}requestAnimationFrame(engGameLoop)}
+    document.getElementById('engBackBtn').onclick=()=>{engState.active=false;showScreen('course')};document.getElementById('engPauseBtn').onclick=()=>{if(!engState.active)return;engState.paused=true;showPauseMenu('english')};
+    function showPauseMenu(gt){const m=document.getElementById('modalContainer');const smallCls=gt==='turkish'?' tr-small-modal-btn':'';m.innerHTML=`<div class="modal-overlay"><div class="modal-card"><h2><i class="fas fa-pause"></i> Oyun Durduruldu</h2><button class="btn-3d${smallCls}" id="resumeBtn">Devam Et</button><button class="btn-3d${smallCls}" id="restartBtn">Yeniden Başla</button><button class="btn-3d${smallCls}" id="menuBtn">Ana Menü</button></div></div>`;document.getElementById('resumeBtn').onclick=()=>{m.innerHTML='';if(gt==='english')engState.paused=false;else trState.paused=false};document.getElementById('restartBtn').onclick=()=>{m.innerHTML='';if(gt==='english'){engState.active=false;startEnglish()}else{trState.active=false;clearInterval(trSpawnInterval);startTurkish()}};document.getElementById('menuBtn').onclick=()=>{m.innerHTML='';showScreen('course')}}
+    setTimeout(()=>{['engLeft','engRight'].forEach(id=>{const b=document.getElementById(id);if(b){b.addEventListener('touchstart',e=>{e.preventDefault();if(id.includes('Left'))engKeys.left=true;else engKeys.right=true});b.addEventListener('touchend',()=>{if(id.includes('Left'))engKeys.left=false;else engKeys.right=false})}})},100);
+
+    // ========== TÜRKÇE (aynı) ==========
+    let trState={active:false,paused:false,levelIndex:0,score:0,lives:3,correctStreak:0,learned:0,canvas:null,ctx:null,book:{x:0,y:0,w:80,h:60},balloons:[],sparkles:[],learnedWords:[],pending:[],keys:{left:false,right:false},allWords:[],usedWords:new Set()};let trSpawnInterval;
+    function startTurkish(){if(trSpawnInterval)clearInterval(trSpawnInterval);trState={active:true,paused:false,levelIndex:0,score:0,lives:3,learned:0,canvas:document.getElementById('trCanvas'),ctx:null,book:{x:0,y:0,w:80,h:60},balloons:[],sparkles:[],learnedWords:[],pending:[],keys:{left:false,right:false},allWords:[],usedWords:new Set()};trState.ctx=trState.canvas.getContext('2d');loadTRLevel();document.getElementById('trPlayerName').innerText=state.playerName;updateTrHUD();showScreen('turkish');resizeTrCanvas();trSpawnInterval=setInterval(()=>{if(trState.active&&!trState.paused)spawnTrBalloon()},2200);trGameLoop()}
+    function loadTRLevel(){let w=[];if(trState.levelIndex===0)w=[...TR_VOCAB.grade5];else if(trState.levelIndex===1)w=[...TR_VOCAB.grade6];else if(trState.levelIndex===2)w=[...TR_VOCAB.grade7];else w=[...TR_VOCAB.grade8];trState.allWords=shuffleArr(w);trState.learned=0;trState.learnedWords=[];trState.pending=[];trState.usedWords.clear();document.getElementById('learnedCount').innerText='0'}
+    function updateTrHUD(){document.getElementById('trScore').innerText=trState.score;document.getElementById('trLives').innerHTML='❤️'.repeat(trState.lives)+'♡'.repeat(3-trState.lives);document.getElementById('learnedCount').innerText=trState.learned}
+    function resizeTrCanvas(){const c=trState.canvas;c.width=c.parentElement.clientWidth;c.height=c.parentElement.clientHeight;trState.book.x=c.width/2-40;trState.book.y=c.height-100}
+    function spawnTrBalloon(){if(!trState.active||trState.learned>=trState.allWords.length)return;let w;if(trState.pending.length>0)w=trState.pending.shift();else{const avail=trState.allWords.filter(w=>!trState.usedWords.has(w.word));if(avail.length===0)return;w=avail[0];trState.usedWords.add(w.word)}trState.balloons.push({x:Math.random()*(trState.canvas.width-100)+50,y:-60,w:85,h:100,word:w,speed:0.9+Math.random()*0.7})}
+    function showTrModal(word,balloon){trState.paused=true;const m=document.getElementById('modalContainer');m.innerHTML=`<div class="modal-overlay"><div class="modal-card"><h3>"${word.word}" ne demek?</h3><div id="trOpts"></div><div id="trFb" style="margin-top:15px"></div></div></div>`;const od=document.getElementById('trOpts');let answered=false;shuffleArr([...word.options]).forEach(o=>{const b=document.createElement('button');b.className='option-btn';b.innerText=o;b.onclick=()=>{if(answered)return;answered=true;handleTrAnswer(o===word.meaning,word,balloon)};od.appendChild(b)})}
+    function handleTrAnswer(correct,word,balloon){const fb=document.getElementById('trFb');if(correct){trState.score+=50;trState.learned++;trState.correctStreak=(trState.correctStreak||0)+1;if(trState.correctStreak>0 && trState.correctStreak%5===0 && trState.lives<3){trState.lives++;playSound(950);}saveScore('turkish',trState.score,`Öğrenilen: ${trState.learned}`);trState.learnedWords.push({word:word.word,meaning:word.meaning});fb.innerHTML='✅ Doğru! Sandığa ışınlandı!';fb.style.color='#bbf7d0';createBeam(balloon.x+42,balloon.y+50);document.getElementById('treasureChest').classList.add('teleport');setTimeout(()=>document.getElementById('treasureChest').classList.remove('teleport'),500);addTrSparkles(balloon.x+42,balloon.y+50,15)}else{trState.lives--;trState.correctStreak=0;if(!trState.pending.find(w=>w.word===word.word))trState.pending.push(word);fb.innerHTML=`❌ Yanlış! ${word.meaning}`;fb.style.color='#fecaca'}updateTrHUD();setTimeout(()=>{document.getElementById('modalContainer').innerHTML='';trState.paused=false;if(trState.lives<=0)trGameOver();else if(trState.learned>=trState.allWords.length)trLevelUp()},2000)}
+    function trLevelUp(){if(trState.levelIndex<3){trState.levelIndex++;loadTRLevel();trState.balloons=[];updateTrHUD()}else{trState.active=false;clearInterval(trSpawnInterval);saveScore('turkish',trState.score,`Öğrenilen: ${trState.learned}`);alert('🎉 TEBRİKLER!');showScreen('course')}}
+    function trGameOver(){trState.active=false;clearInterval(trSpawnInterval);saveScore('turkish',trState.score,`Öğrenilen: ${trState.learned}`);alert('Oyun Bitti!');showScreen('course')}
+    document.getElementById('treasureChest').addEventListener('click',()=>{if(!trState.active)return;trState.paused=true;const m=document.getElementById('modalContainer');let wh='';if(trState.learnedWords.length===0)wh='<p style="color:#aaa">Henüz kelime öğrenmedin.</p>';else trState.learnedWords.forEach(item=>{wh+=`<div style="background:rgba(255,255,255,0.1);padding:10px;margin:5px 0;border-radius:15px;display:flex;justify-content:space-between"><span style="color:#FFD700;font-weight:bold">${item.word}</span><span style="color:#e0e0ff">→ ${item.meaning}</span></div>`});m.innerHTML=`<div class="modal-overlay"><div class="modal-card"><h2>📚 Öğrenilen Kelimeler</h2><div style="max-height:300px;overflow-y:auto">${wh}</div><button class="btn-3d tr-small-modal-btn" id="closeChestBtn">Kapat</button></div></div>`;document.getElementById('closeChestBtn').onclick=()=>{m.innerHTML='';trState.paused=false}});
+    function createBeam(x,y){const b=document.createElement('div');b.className='beam';b.style.cssText='position:absolute;width:4px;background:linear-gradient(180deg,gold,transparent);filter:blur(2px);animation:beamEffect 0.8s forwards;pointer-events:none;z-index:20';b.style.left=x+'px';b.style.top=y+'px';document.querySelector('#turkishScreen .game-container').appendChild(b);setTimeout(()=>b.remove(),800)}
+    function addTrSparkles(x,y,c){for(let i=0;i<c;i++)trState.sparkles.push({x,y,vx:(Math.random()-0.5)*6,vy:(Math.random()-0.5)*6-2,life:40})}
+    document.addEventListener('keydown',e=>{if(!trState.active||trState.paused)return;if(e.key==='ArrowLeft'||e.key==='a'){e.preventDefault();trState.keys.left=true}if(e.key==='ArrowRight'||e.key==='d'){e.preventDefault();trState.keys.right=true}});document.addEventListener('keyup',e=>{if(e.key==='ArrowLeft'||e.key==='a')trState.keys.left=false;if(e.key==='ArrowRight'||e.key==='d')trState.keys.right=false});
+    function trUpdate(){if(!trState.active||trState.paused)return;const move=6;if(trState.keys.left)trState.book.x=Math.max(0,trState.book.x-move);if(trState.keys.right)trState.book.x=Math.min(trState.canvas.width-trState.book.w,trState.book.x+move);for(let i=trState.balloons.length-1;i>=0;i--){const b=trState.balloons[i];b.y+=b.speed;b.x+=Math.sin(b.y*0.01)*0.5;if(b.x<trState.book.x+trState.book.w&&b.x+b.w>trState.book.x&&b.y<trState.book.y+trState.book.h&&b.y+b.h>trState.book.y){showTrModal(b.word,b);trState.balloons.splice(i,1);return}if(b.y>trState.canvas.height+100){if(!trState.pending.find(w=>w.word===b.word.word))trState.pending.push(b.word);trState.balloons.splice(i,1)}}trState.sparkles=trState.sparkles.filter(s=>{s.x+=s.vx;s.y+=s.vy;s.vy+=0.1;s.life--;return s.life>0})}
+    function trDraw(){const c=trState.canvas,ctx=trState.ctx,w=c.width,h=c.height;const grad=ctx.createLinearGradient(0,0,0,h);grad.addColorStop(0,'#1a1a4e');grad.addColorStop(1,'#2d2d6e');ctx.fillStyle=grad;ctx.fillRect(0,0,w,h);ctx.fillStyle='#fff';for(let i=0;i<20;i++){ctx.globalAlpha=0.5+Math.sin(Date.now()*0.002+i)*0.3;ctx.beginPath();ctx.arc((i*37+Date.now()*0.01)%w,(i*23)%h,2,0,Math.PI*2);ctx.fill()}ctx.globalAlpha=1;trState.balloons.forEach(b=>{ctx.shadowColor='#fff';ctx.shadowBlur=20;const g=ctx.createRadialGradient(b.x+20,b.y+20,5,b.x+42,b.y+50,55);g.addColorStop(0,'#ff6b6b');g.addColorStop(0.7,'#c92a2a');ctx.fillStyle=g;ctx.beginPath();ctx.ellipse(b.x+42,b.y+50,42,50,0,0,Math.PI*2);ctx.fill();ctx.fillStyle='#fff';ctx.font='bold 11px Poppins';ctx.textAlign='center';ctx.fillText(b.word.word,b.x+42,b.y+55);ctx.beginPath();ctx.moveTo(b.x+42,b.y+100);ctx.lineTo(b.x+38,b.y+115);ctx.lineTo(b.x+46,b.y+115);ctx.fill()});ctx.shadowBlur=0;ctx.shadowColor='#ffd700';ctx.shadowBlur=20;ctx.fillStyle='#8B4513';ctx.beginPath();ctx.roundRect(trState.book.x,trState.book.y+15,80,15,5);ctx.fill();ctx.fillStyle='#F5DEB3';ctx.beginPath();ctx.roundRect(trState.book.x+5,trState.book.y-5,32,25,3);ctx.fill();ctx.beginPath();ctx.roundRect(trState.book.x+43,trState.book.y-5,32,25,3);ctx.fill();ctx.fillStyle='#FFF8DC';ctx.beginPath();ctx.roundRect(trState.book.x+8,trState.book.y-3,26,21,2);ctx.fill();ctx.beginPath();ctx.roundRect(trState.book.x+46,trState.book.y-3,26,21,2);ctx.fill();ctx.fillStyle='#654321';ctx.beginPath();ctx.roundRect(trState.book.x+35,trState.book.y-8,10,28,3);ctx.fill();ctx.fillStyle='#000';ctx.beginPath();ctx.arc(trState.book.x+20,trState.book.y,3,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(trState.book.x+60,trState.book.y,3,0,Math.PI*2);ctx.fill();ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(trState.book.x+18,trState.book.y-2,1.5,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(trState.book.x+58,trState.book.y-2,1.5,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#000';ctx.lineWidth=2;ctx.beginPath();ctx.arc(trState.book.x+40,trState.book.y+8,8,0.1,Math.PI-0.1);ctx.stroke();ctx.shadowBlur=0;trState.sparkles.forEach(s=>{ctx.globalAlpha=s.life/40;ctx.fillStyle=`hsl(${s.life*9},100%,60%)`;ctx.beginPath();ctx.arc(s.x,s.y,4,0,Math.PI*2);ctx.fill()});ctx.globalAlpha=1}
+    function trGameLoop(){if(state.currentScreen==='turkish'){trUpdate();trDraw()}requestAnimationFrame(trGameLoop)}
+    document.getElementById('trBackBtn').onclick=()=>{trState.active=false;clearInterval(trSpawnInterval);showScreen('course')};document.getElementById('trPauseBtn').onclick=()=>{if(!trState.active)return;trState.paused=true;showPauseMenu('turkish')};
+    setTimeout(()=>{['trLeft','trRight'].forEach(id=>{const b=document.getElementById(id);if(b){b.addEventListener('touchstart',e=>{e.preventDefault();if(id.includes('Left'))trState.keys.left=true;else trState.keys.right=true});b.addEventListener('touchend',()=>{if(id.includes('Left'))trState.keys.left=false;else trState.keys.right=false})}})},100);
+
+    // ========== SOSYAL (aynı) ==========
+    function startSocial(){sosState={completed:[],currentChapter:null,questionIndex:0,score:0,askedQuestions:[]};showScreen('social');document.getElementById('sosQuestArea').style.display='none';document.getElementById('sosMapArea').style.display='flex';document.getElementById('sosTitle').innerText='OSMANLI: KAYIP DEFTER';renderSosMap()}
+    function renderSosMap(){SOS_CHAPTERS.forEach(ch=>{if(sosState.completed.includes(ch.id))ch.completed=true;else ch.completed=false;if(ch.id===1)ch.unlocked=true;else ch.unlocked=sosState.completed.includes(ch.id-1)});const ma=document.getElementById('sosMapArea');ma.innerHTML='';SOS_CHAPTERS.forEach(ch=>{const n=document.createElement('div');n.className='sos-map-node';if(ch.completed)n.classList.add('completed');if(!ch.unlocked&&!ch.completed)n.classList.add('locked');n.innerHTML=`<i class="fas ${ch.icon}"></i><span class="node-label">${ch.name}</span>${!ch.unlocked&&!ch.completed?'<i class="fas fa-lock"></i>':''}${ch.completed?'<i class="fas fa-check-circle"></i>':''}`;n.style.cursor=(ch.unlocked||ch.completed)?'pointer':'not-allowed';if(ch.unlocked||ch.completed)n.addEventListener('click',()=>startSosChapter(ch.id));ma.appendChild(n)})}
+    function startSosChapter(chId){sosState.currentChapter=chId;sosState.questionIndex=0;sosState.askedQuestions=[];document.getElementById('sosTitle').innerText=SOS_CHAPTERS.find(c=>c.id===chId).name;document.getElementById('sosMapArea').style.display='none';document.getElementById('sosQuestArea').style.display='block';showSosQuestion()}
+    function showSosQuestion(){const chId=sosState.currentChapter;const qs=SOS_QUESTIONS[chId];if(!qs||sosState.askedQuestions.length>=qs.length){sosChapterComplete();return}const q=qs[sosState.questionIndex];sosState.askedQuestions.push(sosState.questionIndex);document.getElementById('sosQuestArea').innerHTML=`<div class="sos-quest-card"><p style="font-size:1.2rem;margin-bottom:20px">${q.q}</p>${q.opts.map(o=>`<button class="option-btn" style="width:90%;margin:6px auto;display:block">${o}</button>`).join('')}<p style="margin-top:15px;color:#aaa">Soru ${sosState.askedQuestions.length} / ${qs.length}</p></div>`;document.querySelectorAll('#sosQuestArea .option-btn').forEach(b=>b.addEventListener('click',function(){sosProcessAnswer(this.textContent)}))}
+    function sosProcessAnswer(a){const q=SOS_QUESTIONS[sosState.currentChapter][sosState.questionIndex];const m=document.getElementById('modalContainer');if(a===q.ans){sosState.score+=100;saveScore('social',sosState.score,`Bölüm: ${sosState.currentChapter} · Soru: ${sosState.askedQuestions.length}`);m.innerHTML=`<div class="modal-overlay"><div class="modal-card"><h3 style="color:#bbf7d0">✅ Doğru!</h3><button class="btn-3d" id="sosNextBtn" style="font-size:0.82rem;padding:7px 14px;min-width:96px;width:auto;max-width:130px;display:inline-flex;align-items:center;justify-content:center;margin-top:8px;">Devam</button></div></div>`}else{m.innerHTML=`<div class="modal-overlay"><div class="modal-card"><h3 style="color:#fecaca">❌ Yanlış</h3><p>Doğru: ${q.ans}</p><button class="btn-3d" id="sosNextBtn" style="font-size:0.82rem;padding:7px 14px;min-width:96px;width:auto;max-width:130px;display:inline-flex;align-items:center;justify-content:center;margin-top:8px;">Devam</button></div></div>`}document.getElementById('sosNextBtn').addEventListener('click',()=>{m.innerHTML='';sosState.questionIndex++;if(sosState.askedQuestions.length>=SOS_QUESTIONS[sosState.currentChapter].length)sosChapterComplete();else showSosQuestion()})}
+    function sosChapterComplete(){const chId=sosState.currentChapter;saveScore('social',sosState.score,`Tamamlanan bölüm: ${chId}`);if(!sosState.completed.includes(chId))sosState.completed.push(chId);const ch=SOS_CHAPTERS.find(c=>c.id===chId);const m=document.getElementById('modalContainer');m.innerHTML=`<div class="modal-overlay"><div class="modal-card"><h2 style="color:#ffd700">📜 ${ch.name} Tamamlandı!</h2><button class="btn-3d" id="sosMapBtn" style="font-size:0.82rem;padding:7px 14px;min-width:96px;width:auto;max-width:130px;display:inline-flex;align-items:center;justify-content:center;margin-top:8px;">Haritaya Dön</button></div></div>`;document.getElementById('sosMapBtn').addEventListener('click',()=>{m.innerHTML='';document.getElementById('sosMapArea').style.display='flex';document.getElementById('sosQuestArea').style.display='none';document.getElementById('sosTitle').innerText='OSMANLI: KAYIP DEFTER';renderSosMap()})}
+    document.getElementById('sosBackBtn').onclick=()=>showScreen('course');
+
+    // ========== FEN (güncellendi) ==========
+    function updateFenScoreUI(){const el=document.getElementById('fenScoreHud');if(el)el.textContent=fenScore}
+    function startFenGame(){fenQuestions=[];fenCells=[];fenPlayer={x:1,y:1};fenTargets=[];fenRound=0;fenScore=0;fenCorrect=0;fenCurrentQ=null;fenStarted=false;fenLocked=false;fenKnownPool=[];initFenBoard();drawFenPlayer();updateFenInfoPanel(null);updateFenKnownUI&&updateFenKnownUI();updateFenScoreUI()}
+    function initFenBoard(){const board=document.getElementById('fenBoard');board.style.gridTemplateColumns=`repeat(13, 40px)`;board.innerHTML='';fenCells=[];for(let y=0;y<MAZE.length;y++){const row=[];for(let x=0;x<MAZE[y].length;x++){const div=document.createElement('div');div.style.cssText=`width:40px;height:40px;border-radius:8px;position:relative;display:flex;align-items:center;justify-content:center;background:${MAZE[y][x]==='#'?'linear-gradient(180deg,#1d4ed8,#1e3a8a);box-shadow:inset 0 2px 0 rgba(255,255,255,.12)':'rgba(255,255,255,.04)'}`;board.appendChild(div);row.push(div)}fenCells.push(row)}}
+    function drawFenPlayer(){for(let y=0;y<fenCells.length;y++){for(let x=0;x<fenCells[y].length;x++){const old=fenCells[y][x].querySelector('.fen-einstein');if(old)old.remove()}}const el=document.createElement('div');el.className='fen-einstein';el.style.cssText='position:absolute;inset:2px;display:flex;align-items:center;justify-content:center;z-index:4;pointer-events:none';el.innerHTML=`<div style="position:relative;width:34px;height:34px;"><div style="width:32px;height:32px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ffe0b2,#f5d0a9 50%,#e8b88a);position:absolute;top:1px;left:1px;box-shadow:0 2px 4px rgba(0,0,0,0.3);"></div><div style="position:absolute;top:-4px;left:-4px;right:-4px;height:18px;background:radial-gradient(ellipse at 50% 100%,#fff 0%,#e8e8e8 50%,transparent 70%);border-radius:50% 50% 0 0;"></div><div style="position:absolute;top:-2px;left:-6px;width:12px;height:14px;background:#fff;border-radius:50%;transform:rotate(-20deg);"></div><div style="position:absolute;top:-2px;right:-6px;width:12px;height:14px;background:#fff;border-radius:50%;transform:rotate(20deg);"></div><div style="position:absolute;top:10px;left:6px;width:6px;height:6px;border-radius:50%;background:#1a1a2e;"></div><div style="position:absolute;top:10px;right:6px;width:6px;height:6px;border-radius:50%;background:#1a1a2e;"></div><div style="position:absolute;top:9px;left:3px;width:12px;height:9px;border-radius:50%;border:1.5px solid #333;"></div><div style="position:absolute;top:9px;right:3px;width:12px;height:9px;border-radius:50%;border:1.5px solid #333;"></div><div style="position:absolute;top:13px;left:15px;width:4px;height:2px;background:#333;"></div><div style="position:absolute;top:19px;left:5px;right:5px;height:6px;background:#fff;border-radius:0 0 50% 50%;box-shadow:0 1px 2px rgba(0,0,0,0.2);"></div><div style="position:absolute;top:21px;left:10px;width:12px;height:5px;border-bottom:2px solid #1a1a2e;border-radius:0 0 50% 50%;"></div></div>`;fenCells[fenPlayer.y][fenPlayer.x].appendChild(el)}
+    function fenFreeCells(){const arr=[];for(let y=1;y<MAZE.length-1;y++){for(let x=1;x<MAZE[y].length-1;x++){if(MAZE[y][x]!=='.')continue;if(x===fenPlayer.x&&y===fenPlayer.y)continue;if(fenTargets.some(t=>t.x===x&&t.y===y))continue;arr.push({x,y});}}return arr;}
+    function getCategoryTag(cat){if(cat==='metal')return '<span class="fen-info-tag tag-metal">🔩 Metal</span>';if(cat==='ametal')return '<span class="fen-info-tag tag-nonmetal">💨 Ametal</span>';if(cat==='soy gaz')return '<span class="fen-info-tag tag-noble">👑 Soy Gaz</span>';if(cat==='yarı metal')return '<span class="fen-info-tag tag-nonmetal">⚡ Yarı Metal</span>';return '';}
+    function getElementColor(cat){if(cat==='metal')return 'rgba(135,206,235,0.7)';if(cat==='ametal')return 'rgba(144,238,144,0.7)';if(cat==='soy gaz')return 'rgba(221,160,221,0.7)';return 'rgba(255,218,185,0.7)';}
+    function updateFenInfoPanel(el){const panel=document.getElementById('fenInfoContent');if(!el){panel.innerHTML=`<i class="fas fa-atom" style="font-size:2rem;color:#00e5ff;"></i><p style="margin-top:10px;">Bir elemente ulaştığında detaylı bilgiler burada görünecek.</p>`;return}panel.innerHTML=`<div style="text-align:center;background:rgba(0,229,255,0.1);border-radius:12px;padding:8px;"><div style="font-size:2rem;font-weight:900;color:#ffd700;">${el.symbol}</div><div style="font-size:1rem;color:#e0f2fe;">${el.name}</div><div style="margin-top:4px;">${getCategoryTag(el.category)}</div></div><div class="fen-info-row"><span class="lbl">Atom No</span><span class="val">${el.num}</span></div><div class="fen-info-row"><span class="lbl">Atom Ağırlığı</span><span class="val">${el.weight} u</span></div><div class="fen-info-row"><span class="lbl">Grup</span><span class="val">${el.group}. Grup</span></div><div class="fen-info-row"><span class="lbl">Periyot</span><span class="val">${el.period}. Periyot</span></div><div class="fen-info-desc"><strong>🔬 Özellik:</strong> ${el.props}</div><div class="fen-info-desc"><strong>🏭 Kullanım:</strong> ${el.usage}</div><div class="fen-info-desc"><strong>💡 Bilgi:</strong> ${el.info}</div>`;}
+    function generateFenQuestions(){const qs=[];const shuffled=[...ALL_ELEMENTS].sort(()=>Math.random()-0.5);for(let i=0;i<50;i++){const el=shuffled[i % shuffled.length];const types=[{prompt:`Atom numarası ${el.num} olan element?`,answer:el.symbol,type:'num'},{prompt:`${el.name} elementinin sembolü?`,answer:el.symbol,type:'sym'},{prompt:`Hangisi metaldir?`,answer:["Fe","Cu","Ag","Au","Na","K","Ca","Mg","Al","Zn","Hg","Pb","Li"].includes(el.symbol)?el.symbol:"Fe",type:'num'},{prompt:`Hangisi ametaldir?`,answer:["H","C","N","O","F","P","S","Cl","Si"].includes(el.symbol)?el.symbol:"O",type:'num'}];qs.push(types[Math.floor(Math.random()*types.length)])}return qs}
+    function fenPlaceTargets(q){document.querySelectorAll('.fen-elementCard').forEach(card=>card.remove());fenTargets=[];const correct=ALL_ELEMENTS.find(e=>e.symbol===q.answer)||ALL_ELEMENTS[0];const wrongPool=ALL_ELEMENTS.filter(e=>e.symbol!==q.answer);const wrongs=shuffleArr(wrongPool).slice(0,2);const set=shuffleArr([correct,...wrongs]);const spots=shuffleArr(fenFreeCells()).slice(0,3);set.forEach((el,i)=>{const pos=spots[i];const card=document.createElement('div');card.classList.add('fen-elementCard');card.title=el.name;card.style.cssText=`width:86%;height:86%;border-radius:8px;background:${getElementColor(el.category)};border:1px solid rgba(255,255,255,0.35);display:flex;align-items:center;justify-content:center;text-align:center;color:#fff;text-shadow:0 1px 3px black;box-shadow:inset 0 2px 6px rgba(255,255,255,.22),0 3px 8px rgba(0,0,0,.25);`;card.innerHTML=`<div style="font-size:1rem;font-weight:900;letter-spacing:.3px;">${el.symbol}</div>`;fenCells[pos.y][pos.x].appendChild(card);fenTargets.push({x:pos.x,y:pos.y,element:el})});}
+    function fenNextRound(){if(fenRound>=50){fenEndGame('🏆 Tebrikler!');return}fenPlayer={x:1,y:1};fenCurrentQ=fenQuestions[fenRound];document.getElementById('fenQuestion').textContent=fenCurrentQ.prompt;document.getElementById('fenFeedback').textContent='';fenPlaceTargets(fenCurrentQ);drawFenPlayer();fenRound++;}
+
+    function updateFenPoolUI(){const c=document.getElementById('fenPoolCount');if(c)c.textContent=fenWrongPool.length;}
+    function updateFenKnownUI(){const c=document.getElementById('fenKnownCount');if(c)c.textContent=fenKnownPool.length;}
+    function addFenWrongToPool(question,chosen,correct){const key=question.prompt+'|'+correct.symbol;if(!fenWrongPool.some(item=>item.key===key)){fenWrongPool.push({key,question:question.prompt,wrong:chosen.symbol+' - '+chosen.name,right:correct.symbol+' - '+correct.name,explanation:`${correct.symbol}, ${correct.name} elementinin periyodik cetveldeki sembolüdür. Atom numarası ${correct.num}. ${correct.info}`,recommendation:`Tavsiye: Soru kökündeki ipucunu önce belirle; sonra kartlarda yalnızca periyodik cetvel sembolüne bak.`});}updateFenPoolUI();}
+    function addFenKnownToPool(question,correct){const key=question.prompt+'|'+correct.symbol;if(!fenKnownPool.some(item=>item.key===key)){fenKnownPool.push({key,question:question.prompt,right:correct.symbol+' - '+correct.name,explanation:`${correct.symbol}, ${correct.name} elementinin sembolüdür. Atom numarası ${correct.num}. ${correct.info}`});}updateFenKnownUI();}
+    function openFenExperimentPool(){const m=document.getElementById('modalContainer');let body='';if(fenWrongPool.length===0){body='<p style="color:#cbd5e1;margin:15px 0;">Henüz yanlış yapılan soru yok. Harika gidiyorsun!</p>';}else{body=fenWrongPool.map((item,i)=>`<div class="fen-review-card"><b>${i+1}. Soru:</b> ${item.question}<br><span class="wrong">Seçilen: ${item.wrong}</span><br><span class="right">Doğru: ${item.right}</span><div class="note">🔬 ${item.explanation}</div><div class="note" style="border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.08)">💡 ${item.recommendation||'Tavsiye: Sorudaki ana ipucunu bulup doğru element bilgisiyle eşleştir.'}</div></div>`).join('');}m.innerHTML=`<div class="modal-overlay"><div class="modal-card"><h2 style="color:#67e8f9"><i class="fas fa-vial"></i> Deney Havuzu</h2><p style="color:#e0f2fe;font-size:.95rem;margin:8px 0 12px;">Yanlış yaptığın soruları burada tekrar inceleyebilirsin.</p><div style="max-height:420px;overflow-y:auto">${body}</div><button class="btn-3d" id="closeFenPoolBtn" style="margin-top:12px">Kapat</button></div></div>`;document.getElementById('closeFenPoolBtn').onclick=()=>{m.innerHTML='';};}
+    function openFenKnownPool(){const m=document.getElementById('modalContainer');let body='';if(fenKnownPool.length===0){body='<p style="color:#cbd5e1;margin:15px 0;">Henüz doğru bilinen soru yok. Oyuna başlayınca burada birikecek.</p>';}else{body=fenKnownPool.map((item,i)=>`<div class="fen-review-card" style="border-color:rgba(34,197,94,.35)"><b>${i+1}. Soru:</b> ${item.question}<br><span class="right">Doğru: ${item.right}</span><div class="note" style="border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.08)">✅ ${item.explanation}</div></div>`).join('');}m.innerHTML=`<div class="modal-overlay"><div class="modal-card"><h2 style="color:#86efac"><i class="fas fa-check-circle"></i> Bildiklerim</h2><p style="color:#e0f2fe;font-size:.95rem;margin:8px 0 12px;">Doğru bildiğin element sorularını burada tekrar görebilirsin.</p><div style="max-height:420px;overflow-y:auto">${body}</div><button class="btn-3d" id="closeFenKnownBtn" style="margin-top:12px">Kapat</button></div></div>`;document.getElementById('closeFenKnownBtn').onclick=()=>{m.innerHTML='';};}
+    function fenCheckCollision(){const found=fenTargets.find(t=>t.x===fenPlayer.x&&t.y===fenPlayer.y);if(!found)return;const correctEl=ALL_ELEMENTS.find(e=>e.symbol===fenCurrentQ.answer)||ALL_ELEMENTS[0];if(found.element.symbol===fenCurrentQ.answer){fenLocked=true;fenScore+=10;fenCorrect++;updateFenScoreUI();saveScore('fen',fenScore,`Doğru: ${fenCorrect}`);addFenKnownToPool(fenCurrentQ,found.element);document.getElementById('fenFeedback').innerHTML='<span style="color:#22c55e">✅ Doğru! +10 puan · Bildiklerim alanına eklendi. Bilgiyi inceleyebilirsin.</span>';updateFenInfoPanel(found.element);playSound(600);setTimeout(()=>{fenLocked=false;fenNextRound()},2500);}else{fenLocked=true;addFenWrongToPool(fenCurrentQ,found.element,correctEl);document.getElementById('fenFeedback').innerHTML='<span style="color:#fbbf24">❌ Yanlış! Soru Deney Havuzu’na eklendi. Bilgiyi inceleyebilirsin. Doğru cevap: '+correctEl.symbol+'</span>';updateFenInfoPanel(correctEl);playSound(200);setTimeout(()=>{fenLocked=false;fenNextRound()},3000);}}
+    function fenMove(dx,dy){if(!fenStarted||fenLocked)return;const nx=fenPlayer.x+dx,ny=fenPlayer.y+dy;if(MAZE[ny]&&MAZE[ny][nx]==='.'){fenPlayer.x=nx;fenPlayer.y=ny;drawFenPlayer();fenCheckCollision()}}
+    function fenStartGameFn(){fenQuestions=generateFenQuestions();fenRound=0;fenScore=0;fenCorrect=0;fenWrongPool=[];fenKnownPool=[];updateFenScoreUI();updateFenPoolUI();updateFenKnownUI();fenPlayer={x:1,y:1};fenStarted=true;fenLocked=false;initFenBoard();updateFenInfoPanel(null);fenNextRound()}
+    function fenEndGame(msg){fenStarted=false;saveScore('fen',fenScore,`Doğru: ${fenCorrect}`);document.getElementById('fenQuestion').textContent=msg}
+    document.getElementById('fenStartBtn').onclick=fenStartGameFn;document.getElementById('fenRestartBtn').onclick=fenStartGameFn;
+    document.getElementById('fenBackBtn').onclick=()=>{fenStarted=false;showScreen('course')};
+    document.addEventListener('keydown',e=>{if(state.currentScreen!=='fen'||!fenStarted||fenLocked)return;if(e.key==='ArrowUp'){e.preventDefault();fenMove(0,-1)}if(e.key==='ArrowDown'){e.preventDefault();fenMove(0,1)}if(e.key==='ArrowLeft'){e.preventDefault();fenMove(-1,0)}if(e.key==='ArrowRight'){e.preventDefault();fenMove(1,0)}});
+    function bindFenTouch(id,dx,dy){const btn=document.getElementById(id);if(!btn)return;btn.addEventListener('touchstart',(e)=>{e.preventDefault();fenMove(dx,dy);});}
+    bindFenTouch('fenUp',0,-1);bindFenTouch('fenDown',0,1);bindFenTouch('fenLeft',-1,0);bindFenTouch('fenRight',1,0);document.getElementById('fenExperimentPool').addEventListener('click',openFenExperimentPool);document.getElementById('fenKnownPool').addEventListener('click',openFenKnownPool);
+
+    // ========== MATEMATİK (aynı) ==========
+    function startMathGame(){mathGame.canvas=document.getElementById('mathCanvas');mathGame.ctx=mathGame.canvas.getContext('2d');mathGame.score=0;mathGame.lives=5;mathGame.maxLives=5;mathGame.combo=0;mathGame.askedQuestions=0;mathGame.totalQuestions=50;mathGame.paused=false;mathGame.gameStarted=true;mathGame.player={x:50,y:300,w:40,h:50,vy:0,vx:0,onGround:false,facingRight:true,colorTimer:0};mathGame.camera={x:0,y:0};mathGame.particles=[];mathGame.touchLeft=false;mathGame.touchRight=false;mathGame.touchJump=false;mathGame.questions=[...ALL_MATH_QUESTIONS];mathGame.questionCursor=0;mathGame.learnedShapes={};mathGame.interactionCooldown=0;mathGame.lastInteractionX=-999;mathGame.lastInteractionType='';resizeMathCanvas();generateMathWorld();updateMathHUD();bindMathTouch('touchLeft','touchLeft');bindMathTouch('touchRight','touchRight');bindMathTouch('touchJump','touchJump');mathGameLoop()}
+    function resizeMathCanvas(){const c=mathGame.canvas;c.width=c.parentElement.clientWidth;c.height=c.parentElement.clientHeight;mathGame.stars=[];for(let i=0;i<140;i++)mathGame.stars.push({x:Math.random()*c.width*5,y:Math.random()*c.height,r:Math.random()*2+0.5,phase:Math.random()*Math.PI*2})}
+    function nextMathQuestion(){const learnedNames=Object.keys(mathGame.learnedShapes||{});if(learnedNames.length>=2&&Math.random()<0.35){const shape=MATH_SHAPES.find(s=>s.name===learnedNames[Math.floor(Math.random()*learnedNames.length)]);if(shape)return {q:shape.q,opts:shape.opts,ans:shape.ans,exp:`${shape.name}: ${shape.info}`};}if(mathGame.questionCursor>=mathGame.questions.length){mathGame.questions=[...ALL_MATH_QUESTIONS];mathGame.questionCursor=0;}return mathGame.questions[mathGame.questionCursor++];}
+    function generateMathWorld(){
+        const w=mathGame.canvas.width,h=mathGame.canvas.height;
+        mathGame.currentWorldWidth=Math.max(w*8,10100);
+        mathGame.platforms=[
+            {x:0,y:h-40,w:mathGame.currentWorldWidth,h:40},
+            {x:260,y:h-125,w:140,h:16},{x:620,y:h-175,w:150,h:16},{x:980,y:h-135,w:145,h:16},
+            {x:1340,y:h-210,w:160,h:16},{x:1710,y:h-155,w:150,h:16},{x:2080,y:h-235,w:165,h:16},
+            {x:2460,y:h-170,w:150,h:16},{x:2840,y:h-255,w:165,h:16},{x:3220,y:h-145,w:150,h:16},
+            {x:3600,y:h-220,w:165,h:16},{x:3990,y:h-180,w:155,h:16},{x:4380,y:h-250,w:170,h:16},
+            {x:4770,y:h-150,w:155,h:16},{x:5160,y:h-225,w:170,h:16},
+            {x:5550,y:h-165,w:160,h:16},{x:5940,y:h-245,w:170,h:16},{x:6330,y:h-140,w:150,h:16},
+            {x:6720,y:h-215,w:170,h:16},{x:7110,y:h-175,w:155,h:16},{x:7500,y:h-255,w:175,h:16},
+            {x:7890,y:h-160,w:155,h:16},{x:8280,y:h-230,w:170,h:16},{x:8670,y:h-180,w:165,h:16},
+            {x:9060,y:h-250,w:175,h:16},{x:9450,y:h-145,w:160,h:16}
+        ];
+        mathGame.questionBlocks=[];
+        const groundY=h-40;
+        for(let i=0;i<mathGame.totalQuestions;i++){
+            const x=220+i*178;
+            const y=groundY-78;
+            mathGame.questionBlocks.push({x,y,w:34,h:34,question:nextMathQuestion(),collected:false,pulse:Math.random()*Math.PI*2,armed:true})
+        }
+        mathGame.shapeObjects=[];
+        MATH_SHAPES.forEach((shape,i)=>{
+            const x=420+i*480;
+            const lift=(i%2===0)?0:45;
+            mathGame.shapeObjects.push({x:x,y:groundY-98-lift,w:58,h:54,shape,collected:false,pulse:Math.random()*Math.PI*2,armed:true})
+        });
+        mathGame.hearts=[];
+        for(let i=0;i<5;i++){
+            mathGame.hearts.push({x:760+i*850,y:groundY-78,r:14,collected:false,bounce:0})
+        }
+    }
+    function updateMathHUD(){document.getElementById('mathLives').textContent='❤️'.repeat(Math.max(0,mathGame.lives||0))+'🤍'.repeat(Math.max(0,(mathGame.maxLives||5)-(mathGame.lives||0)));document.getElementById('mathScore').textContent=mathGame.score;document.getElementById('mathRemain').textContent=Math.max(0,mathGame.totalQuestions-mathGame.askedQuestions)}
+    function bindMathTouch(id,key){const btn=document.getElementById(id);if(!btn)return;const activate=(e)=>{e.preventDefault();mathGame[key]=true;};const deactivate=(e)=>{e.preventDefault();mathGame[key]=false;};btn.addEventListener('touchstart',activate,{passive:false});btn.addEventListener('touchend',deactivate);btn.addEventListener('touchcancel',deactivate);btn.addEventListener('mousedown',activate);btn.addEventListener('mouseup',deactivate);btn.addEventListener('mouseleave',deactivate);}
+    function showMathShapeInfo(obj){mathGame.paused=true;obj.collected=true;mathGame.learnedShapes[obj.shape.name]=true;mathGame.lastInteractionX=mathGame.player.x;mathGame.lastInteractionType='shape';const m=document.getElementById('modalContainer');m.innerHTML=`<div class="modal-overlay"><div class="modal-card" style="background:linear-gradient(145deg,#1e1b4b,#111827);border-color:${obj.shape.color};"><h2 style="color:#ffd700;">📐 ${obj.shape.name}</h2><canvas id="shapeMiniCanvas" width="140" height="105" style="margin:6px auto 4px;display:block;"></canvas><p style="font-size:1.05rem;line-height:1.45;color:#e0e0ff;margin:12px 0;">${obj.shape.info}</p><p style="font-size:.9rem;color:#bbf7d0;margin:8px 0;">Bu bilgi birazdan karşına soru olarak çıkabilir.</p><button class="btn-3d" id="shapeContinueBtn">Devam Et</button></div></div>`;setTimeout(()=>{const c=document.getElementById('shapeMiniCanvas');if(c){const ctx=c.getContext('2d');drawMathShape(ctx,70,52,34,obj.shape,0,true);}},20);document.getElementById('shapeContinueBtn').onclick=()=>{m.innerHTML='';mathGame.paused=false;mathGame.interactionCooldown=55;mathGame.player.vx=0;};}
+    function showMathQuestion(block){mathGame.paused=true;block.collected=true;mathGame.lastInteractionX=mathGame.player.x;mathGame.lastInteractionType='question';const q=block.question;const m=document.getElementById('modalContainer');m.innerHTML=`<div class="modal-overlay"><div class="modal-card"><h3 style="color:#ffd700;">📦 Matematik Sorusu</h3><p style="font-size:1.3rem;margin:15px 0;">${q.q}</p>${q.opts.map(o=>`<button class="option-btn">${o}</button>`).join('')}<div id="mathFb" style="margin-top:15px;min-height:25px;"></div></div></div>`;let answered=false;m.querySelectorAll('.option-btn').forEach(btn=>{btn.addEventListener('click',function(){if(answered)return;answered=true;m.querySelectorAll('.option-btn').forEach(b=>b.disabled=true);const ans=this.textContent;const fb=document.getElementById('mathFb');mathGame.askedQuestions++;if(ans===q.ans){playSound(800);const add=100+mathGame.combo*10;mathGame.score+=add;mathGame.combo++;saveScore('math',mathGame.score,`Görev: ${mathGame.askedQuestions} / ${mathGame.totalQuestions}`);mathGame.player.colorTimer=15;fb.innerHTML='<span style="color:#22c55e;">✅ Doğru! +'+add+' puan</span>';spawnMathParticles(block.x+17,block.y+17,'#22c55e',18)}else{playSound(300);mathGame.combo=0;fb.innerHTML=`<span style="color:#ef4444;">❌ Yanlış! Doğru: ${q.ans}</span><br><span style="color:#e0e0ff;font-size:.9rem;">${q.exp||'Soruyu tekrar düşünerek bir sonraki blokta devam edebilirsin.'}</span>`}updateMathHUD();setTimeout(()=>{m.innerHTML='';mathGame.paused=false;mathGame.interactionCooldown=65;mathGame.player.vx=0;if(mathGame.askedQuestions>=mathGame.totalQuestions)mathWorldComplete()},1400)})})}
+    function spawnMathParticles(x,y,color,count){for(let i=0;i<count;i++)mathGame.particles.push({x,y,vx:(Math.random()-0.5)*5,vy:(Math.random()-0.5)*5-2,life:25,color,size:Math.random()*3+2})}
+    function mathWorldComplete(){saveScore('math',mathGame.score,`Görev: ${mathGame.askedQuestions||mathGame.answered||0}`);const m=document.getElementById('modalContainer');m.innerHTML=`<div class="modal-overlay"><div class="modal-card"><h2>🎉 Tebrikler!</h2><p>Puan: ${mathGame.score}</p><button class="btn-3d" id="mathRestartBtn">Yeniden Başla</button><button class="btn-3d" id="mathMenuBtn">Menü</button></div></div>`;document.getElementById('mathRestartBtn').addEventListener('click',()=>{m.innerHTML='';startMathGame()});document.getElementById('mathMenuBtn').addEventListener('click',()=>{m.innerHTML='';showScreen('course')})}
+    function mathGameOver(){mathGame.paused=true;mathGame.gameStarted=false;saveScore('math',mathGame.score,`Görev: ${mathGame.askedQuestions||mathGame.answered||0}`);const m=document.getElementById('modalContainer');m.innerHTML=`<div class="modal-overlay"><div class="modal-card"><h2>😢 Oyun Bitti</h2><p>Canların bitti. Puan: ${mathGame.score}</p><button class="btn-3d" id="mathRestartBtn">Yeniden Başla</button><button class="btn-3d" id="mathMenuBtn">Menü</button></div></div>`;document.getElementById('mathRestartBtn').addEventListener('click',()=>{m.innerHTML='';startMathGame()});document.getElementById('mathMenuBtn').addEventListener('click',()=>{m.innerHTML='';showScreen('course')})}
+    document.addEventListener('keydown',e=>{if(state.currentScreen!=='math'||!mathGame.gameStarted||mathGame.paused)return;mathGame.keys[e.key]=true;e.preventDefault()});document.addEventListener('keyup',e=>{mathGame.keys[e.key]=false});
+    function mathUpdate(){
+        if(!mathGame.gameStarted||mathGame.paused)return;
+        if(mathGame.interactionCooldown>0)mathGame.interactionCooldown--;
+        const p=mathGame.player;
+        const left=mathGame.keys['ArrowLeft']||mathGame.keys['a']||mathGame.touchLeft;
+        const right=mathGame.keys['ArrowRight']||mathGame.keys['d']||mathGame.touchRight;
+        const jump=mathGame.keys['ArrowUp']||mathGame.keys['w']||mathGame.keys[' ']||mathGame.touchJump;
+        const maxSpeed=3.5,accel=0.6,friction=0.6;
+        if(left){p.vx=Math.max(-maxSpeed,p.vx-accel);p.facingRight=false}
+        else if(right){p.vx=Math.min(maxSpeed,p.vx+accel);p.facingRight=true}
+        else{if(Math.abs(p.vx)<0.3)p.vx=0;else if(p.vx>0)p.vx=Math.max(0,p.vx-friction);else p.vx=Math.min(0,p.vx+friction)}
+        if(jump&&p.onGround){p.vy=-12;p.onGround=false;mathGame.touchJump=false}
+        p.vy+=0.55;p.x+=p.vx;p.y+=p.vy;p.onGround=false;
+        for(const plat of mathGame.platforms){
+            if(p.x+p.w>plat.x&&p.x<plat.x+plat.w&&p.vy>=0&&p.y+p.h>=plat.y&&p.y+p.h<=plat.y+plat.h+15){
+                p.y=plat.y-p.h;p.vy=0;p.onGround=true;
+            }
+        }
+        if(mathGame.interactionCooldown<=0){
+            for(const obj of mathGame.shapeObjects){
+                if(obj.collected)continue;
+                if(Math.abs(p.x-mathGame.lastInteractionX)<90)continue;
+                if(p.x+p.w>obj.x&&p.x<obj.x+obj.w&&p.y+p.h>obj.y&&p.y<obj.y+obj.h){
+                    showMathShapeInfo(obj);
+                    break;
+                }
+            }
+        }
+        if(mathGame.interactionCooldown<=0&&!mathGame.paused){
+            for(const block of mathGame.questionBlocks){
+                if(block.collected)continue;
+                if(Math.abs(p.x-mathGame.lastInteractionX)<90)continue;
+                if(p.x+p.w>block.x&&p.x<block.x+block.w&&p.y+p.h>block.y&&p.y<block.y+block.h){
+                    showMathQuestion(block);
+                    break;
+                }
+            }
+        }
+        if(!mathGame.paused){
+            for(const heart of mathGame.hearts){
+                if(heart.collected)continue;
+                if(Math.hypot(p.x+p.w/2-heart.x,p.y+p.h/2-heart.y)<heart.r+20){
+                    if(mathGame.lives<3){mathGame.lives++;playSound(600)}
+                    heart.collected=true;spawnMathParticles(heart.x,heart.y,'#ff4444',10);updateMathHUD();
+                }
+            }
+        }
+        if(p.x<0)p.x=0;
+        if(p.x>mathGame.currentWorldWidth-p.w)p.x=mathGame.currentWorldWidth-p.w;
+        if(p.y>mathGame.canvas.height+100){p.x=Math.max(50,mathGame.camera.x+40);p.y=120;p.vy=0;mathGame.lives=Math.max(1,mathGame.lives-1);updateMathHUD()}
+        mathGame.camera.x+=(p.x-mathGame.canvas.width/2-mathGame.camera.x)*0.08;
+        mathGame.camera.x=Math.max(0,Math.min(mathGame.camera.x,Math.max(0,mathGame.currentWorldWidth-mathGame.canvas.width)));
+        mathGame.particles=mathGame.particles.filter(pt=>{pt.x+=pt.vx;pt.y+=pt.vy;pt.life--;return pt.life>0});
+        if(p.colorTimer>0)p.colorTimer--;
+    }
+    function drawMathShape(ctx,cx,cy,r,shape,t=0,mini=false){
+        ctx.save();
+        ctx.translate(cx,cy);
+        ctx.rotate(Math.sin(t*.7)*0.045);
+        const depth=mini?7:9;
+        let pts=[];
+        if(shape.name==='Dikdörtgen') pts=[[-r*1.35,-r*.62],[r*1.35,-r*.62],[r*1.35,r*.62],[-r*1.35,r*.62]];
+        else if(shape.name==='Paralelkenar') pts=[[-r*1.15,r*.62],[-r*.55,-r*.62],[r*1.15,-r*.62],[r*.55,r*.62]];
+        else if(shape.name==='Yamuk') pts=[[-r*1.2,r*.62],[-r*.68,-r*.62],[r*.68,-r*.62],[r*1.2,r*.62]];
+        else if(shape.name==='Eşkenar Dörtgen') pts=[[0,-r],[r*.95,0],[0,r],[-r*.95,0]];
+        else {const n=shape.sides;for(let i=0;i<n;i++){const a=-Math.PI/2+i*2*Math.PI/n;pts.push([Math.cos(a)*r,Math.sin(a)*r]);}}
+        function path(offsetX=0,offsetY=0){ctx.beginPath();pts.forEach((pt,i)=>{const x=pt[0]+offsetX,y=pt[1]+offsetY;if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);});ctx.closePath();}
+        ctx.shadowColor='rgba(0,0,0,.42)';ctx.shadowBlur=mini?10:16;ctx.shadowOffsetY=mini?5:10;
+        path(depth,depth);ctx.fillStyle='rgba(15,23,42,.58)';ctx.fill();
+        for(let i=0;i<pts.length;i++){const a=pts[i],b=pts[(i+1)%pts.length];ctx.beginPath();ctx.moveTo(a[0],a[1]);ctx.lineTo(b[0],b[1]);ctx.lineTo(b[0]+depth,b[1]+depth);ctx.lineTo(a[0]+depth,a[1]+depth);ctx.closePath();const side=ctx.createLinearGradient(a[0],a[1],a[0]+depth,a[1]+depth);side.addColorStop(0,shape.color);side.addColorStop(1,'rgba(17,24,39,.95)');ctx.fillStyle=side;ctx.fill();}
+        const grad=ctx.createLinearGradient(-r,-r,r,r);grad.addColorStop(0,'#ffffff');grad.addColorStop(.16,'#fef3c7');grad.addColorStop(.42,shape.color);grad.addColorStop(1,'#172554');path();ctx.fillStyle=grad;ctx.fill();ctx.strokeStyle='rgba(255,255,255,.95)';ctx.lineWidth=mini?2.2:2.8;ctx.stroke();
+        ctx.globalAlpha=.42;ctx.fillStyle='#fff';ctx.beginPath();ctx.ellipse(-r*.28,-r*.34,r*.48,r*.16,-.45,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;
+        ctx.shadowBlur=0;ctx.fillStyle='rgba(0,0,0,.32)';ctx.beginPath();ctx.ellipse(depth*.7,r+depth+5,r*1.05,mini?6:7,0,0,Math.PI*2);ctx.fill();
+        ctx.restore();
+    }
+    function mathDraw(){const ctx=mathGame.ctx,w=mathGame.canvas.width,h=mathGame.canvas.height,cam=mathGame.camera;const grad=ctx.createLinearGradient(0,0,0,h);grad.addColorStop(0,'#7dd3fc');grad.addColorStop(0.45,'#c4b5fd');grad.addColorStop(1,'#fde68a');ctx.fillStyle=grad;ctx.fillRect(0,0,w,h);for(const s of mathGame.stars){const sx=(s.x-cam.x*0.2)%(w*5);ctx.fillStyle=`rgba(255,255,255,${0.3+Math.sin(s.phase)*0.2})`;ctx.beginPath();ctx.arc(sx,s.y,s.r,0,Math.PI*2);ctx.fill();s.phase+=0.01}ctx.save();ctx.translate(-cam.x,0);for(const plat of mathGame.platforms){const pg=ctx.createLinearGradient(plat.x,plat.y,plat.x,plat.y+plat.h);pg.addColorStop(0,'#e0f2fe');pg.addColorStop(.45,'#38bdf8');pg.addColorStop(1,'#0f766e');ctx.fillStyle=pg;ctx.beginPath();ctx.roundRect(plat.x,plat.y,plat.w,plat.h,8);ctx.fill();ctx.fillStyle='rgba(255,255,255,0.35)';ctx.fillRect(plat.x+4,plat.y+3,Math.max(0,plat.w-8),3);ctx.fillStyle='rgba(0,40,80,.22)';ctx.fillRect(plat.x+4,plat.y+plat.h-5,Math.max(0,plat.w-8),4)}for(const obj of mathGame.shapeObjects){if(obj.collected)continue;obj.pulse+=0.035;drawMathShape(ctx,obj.x+obj.w/2,obj.y+obj.h/2+Math.sin(obj.pulse)*3,22,obj.shape,obj.pulse,false)}for(const heart of mathGame.hearts){if(heart.collected)continue;const b=Math.sin(heart.bounce)*3;ctx.fillStyle='#ff4444';ctx.beginPath();ctx.moveTo(heart.x,heart.y+b+5);ctx.bezierCurveTo(heart.x-14,heart.y-8+b,heart.x-14,heart.y-18+b,heart.x,heart.y-10+b);ctx.bezierCurveTo(heart.x+14,heart.y-18+b,heart.x+14,heart.y-8+b,heart.x,heart.y+5+b);ctx.fill();heart.bounce+=0.06}for(const block of mathGame.questionBlocks){if(block.collected)continue;const pulse=Math.sin(block.pulse)*3;ctx.shadowColor='#ffd700';ctx.shadowBlur=10+pulse;const bg=ctx.createLinearGradient(block.x,block.y+pulse,block.x+block.w,block.y+block.h+pulse);bg.addColorStop(0,'#fff7ad');bg.addColorStop(.45,'#facc15');bg.addColorStop(1,'#b45309');ctx.fillStyle=bg;ctx.beginPath();ctx.roundRect(block.x,block.y+pulse,block.w,block.h,9);ctx.fill();ctx.shadowBlur=0;ctx.fillStyle='rgba(120,53,15,.45)';ctx.fillRect(block.x+5,block.y+block.h-5+pulse,block.w-10,3);ctx.fillStyle='#1a1a2e';ctx.font='bold 18px Poppins';ctx.textAlign='center';ctx.fillText('?',block.x+block.w/2,block.y+block.h/2+6+pulse);block.pulse+=0.04}ctx.shadowBlur=0;const p=mathGame.player;ctx.save();const sc=p.facingRight?1:-1;const cx=p.x+p.w/2;ctx.translate(cx,p.y+p.h/2);ctx.scale(sc,1);ctx.translate(-cx,-p.y-p.h/2);ctx.fillStyle=p.colorTimer>0?'#ffd700':'#ff6b6b';ctx.shadowColor='#000';ctx.shadowBlur=8;ctx.beginPath();ctx.ellipse(p.x+p.w/2,p.y+p.h/2,p.w/2,p.h/2*(p.onGround?1:1.1),0,0,Math.PI*2);ctx.fill();ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(p.x+p.w/2-8,p.y+p.h/3,7,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(p.x+p.w/2+8,p.y+p.h/3,7,0,Math.PI*2);ctx.fill();ctx.fillStyle='#1a1a2e';ctx.beginPath();ctx.arc(p.x+p.w/2-6,p.y+p.h/3,3,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(p.x+p.w/2+6,p.y+p.h/3,3,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#1a1a2e';ctx.lineWidth=2;ctx.beginPath();ctx.arc(p.x+p.w/2,p.y+p.h/2+5,7,0.1,Math.PI-0.1);ctx.stroke();ctx.restore();for(const pt of mathGame.particles){ctx.fillStyle=pt.color;ctx.globalAlpha=pt.life/25;ctx.beginPath();ctx.arc(pt.x,pt.y,pt.size,0,Math.PI*2);ctx.fill()}ctx.globalAlpha=1;ctx.restore()}
+    function mathGameLoop(){if(state.currentScreen==='math'){mathUpdate();mathDraw()}requestAnimationFrame(mathGameLoop)}
+
+
+    // ========== MATEMATİK YENİ SİSTEM: MADZ MATH RUN ==========
+    const MATH_RUN_TASKS = [
+      {q:"18 + 24 ÷ 6 = ?", ans:"22", opts:["20", "22", "26"], diff:1},
+      {q:"7 × 8 - 19 = ?", ans:"37", opts:["35", "37", "39"], diff:1},
+      {q:"96 ÷ 8 + 13 = ?", ans:"25", opts:["23", "25", "27"], diff:1},
+      {q:"15 × 4 - 18 ÷ 3 = ?", ans:"54", opts:["48", "54", "60"], diff:1},
+      {q:"3² + 4² = ?", ans:"25", opts:["12", "25", "49"], diff:1},
+      {q:"√64 + 5² = ?", ans:"33", opts:["28", "33", "36"], diff:1},
+      {q:"Bir sayının 3 katının 4 eksiği 23 ise sayı kaçtır?", ans:"9", opts:["7", "9", "11"], diff:1},
+      {q:"Çevresi 52 cm olan karenin bir kenarı kaç cm’dir?", ans:"13", opts:["12", "13", "14"], diff:1},
+      {q:"2/3’ü 18 olan sayı kaçtır?", ans:"27", opts:["24", "27", "36"], diff:1},
+      {q:"72’nin %25’i ile 36’nın yarısının toplamı kaçtır?", ans:"36", opts:["30", "36", "42"], diff:1},
+      {q:"Bir dikdörtgenin kısa kenarı 6, uzun kenarı 11 ise alanı kaçtır?", ans:"66", opts:["60", "66", "72"], diff:1},
+      {q:"5² + 6 × 3 = ?", ans:"43", opts:["39", "43", "48"], diff:1},
+      {q:"4 × (9 + 6) - 18 = ?", ans:"42", opts:["38", "42", "48"], diff:2},
+      {q:"120 ÷ (5 × 3) = ?", ans:"8", opts:["6", "8", "10"], diff:2},
+      {q:"6² + √49 = ?", ans:"43", opts:["41", "43", "47"], diff:2},
+      {q:"15 + 3 × 8 - 4² = ?", ans:"23", opts:["21", "23", "25"], diff:2},
+      {q:"2x + 7 = 31 ise x kaçtır?", ans:"12", opts:["10", "12", "14"], diff:2},
+      {q:"3x - 5 = 28 ise x kaçtır?", ans:"11", opts:["9", "11", "13"], diff:2},
+      {q:"5x = 75 ise x + 4 kaçtır?", ans:"19", opts:["17", "19", "21"], diff:2},
+      {q:"48 ÷ 6 + 7² = ?", ans:"57", opts:["55", "57", "59"], diff:2},
+      {q:"9² - 4² = ?", ans:"65", opts:["63", "65", "67"], diff:2},
+      {q:"√144 × 2 + 5 = ?", ans:"29", opts:["24", "29", "34"], diff:2},
+      {q:"Bir üçgenin iki açısı 45° ve 65° ise üçüncü açı kaç derecedir?", ans:"70", opts:["60", "70", "80"], diff:2},
+      {q:"Kenarları 8 cm ve 13 cm olan dikdörtgenin çevresi kaç cm’dir?", ans:"42", opts:["40", "42", "44"], diff:2},
+      {q:"Tabanı 14, yüksekliği 6 olan üçgenin alanı kaçtır?", ans:"42", opts:["36", "42", "84"], diff:2},
+      {q:"3/5 + 1/10 = ?", ans:"7/10", opts:["4/15", "7/10", "2/5"], diff:3},
+      {q:"5/6 - 1/3 = ?", ans:"1/2", opts:["1/2", "2/3", "1/3"], diff:3},
+      {q:"Bir sayının %25’i 18 ise sayı kaçtır?", ans:"72", opts:["64", "72", "80"], diff:3},
+      {q:"120’nin %15’i kaçtır?", ans:"18", opts:["15", "18", "20"], diff:3},
+      {q:"3:4 oranında toplam 84 varsa küçük parça kaçtır?", ans:"36", opts:["32", "36", "48"], diff:3},
+      {q:"4/7’si 32 olan sayının tamamı kaçtır?", ans:"56", opts:["48", "56", "64"], diff:3},
+      {q:"Yamukta tabanlar 10 ve 16, yükseklik 5 ise alan kaçtır?", ans:"65", opts:["55", "65", "75"], diff:3},
+      {q:"Düzgün beşgenin bir dış açısı kaç derecedir?", ans:"72", opts:["60", "72", "90"], diff:3},
+      {q:"Düzgün altıgenin bir iç açısı kaç derecedir?", ans:"120", opts:["108", "120", "135"], diff:3},
+      {q:"Bir ürün 200 TL’den %20 indirimli satılırsa fiyatı kaç TL olur?", ans:"160", opts:["150", "160", "180"], diff:3},
+      {q:"2⁵ + 3² = ?", ans:"41", opts:["35", "41", "64"], diff:3},
+      {q:"√196 - √81 = ?", ans:"5", opts:["5", "7", "9"], diff:3},
+      {q:"3² × 2³ - 10 = ?", ans:"62", opts:["54", "62", "72"], diff:4},
+      {q:"x/4 + 6 = 15 ise x kaçtır?", ans:"36", opts:["32", "36", "40"], diff:4},
+      {q:"2(x + 5) = 34 ise x kaçtır?", ans:"12", opts:["10", "12", "14"], diff:4},
+      {q:"Bir sayının 3 katının 8 fazlası 50 ise sayı kaçtır?", ans:"14", opts:["12", "14", "16"], diff:4},
+      {q:"Ardışık iki çift sayının toplamı 62 ise küçük sayı kaçtır?", ans:"30", opts:["28", "30", "32"], diff:4},
+      {q:"Küpün yüz sayısı ile ayrıt sayısının toplamı kaçtır?", ans:"18", opts:["14", "18", "20"], diff:4},
+      {q:"Dikdörtgen prizmanın köşe sayısı kaçtır?", ans:"8", opts:["6", "8", "12"], diff:4},
+      {q:"Bir araç 3 saatte 210 km giderse 5 saatte kaç km gider?", ans:"350", opts:["320", "350", "370"], diff:4},
+      {q:"√225 + 2⁴ = ?", ans:"31", opts:["29", "31", "35"], diff:4},
+      {q:"5(x - 3) = 40 ise x kaçtır?", ans:"11", opts:["10", "11", "12"], diff:4},
+      {q:"Bir sınıfta kızların sayısı erkeklerin 2 katıdır. Erkekler 12 ise toplam kaç öğrenci vardır?", ans:"36", opts:["24", "36", "48"], diff:4},
+      {q:"Alanı 96 cm² olan dikdörtgenin kısa kenarı 8 cm ise uzun kenarı kaç cm’dir?", ans:"12", opts:["10", "12", "14"], diff:4},
+      {q:"Bir ürün önce %10 zamlanıp sonra 11 TL artarak 121 TL oluyorsa ilk fiyat kaç TL’dir?", ans:"100", opts:["90", "100", "110"], diff:4}
+    ];
+
+    function startMathGame(){
+        mathGame.canvas=document.getElementById('mathCanvas');
+        mathGame.ctx=mathGame.canvas.getContext('2d');
+        mathGame.score=0; mathGame.lives=5; mathGame.maxLives=5; mathGame.coins=0; mathGame.answered=0; mathGame.totalQuestions=50;
+        mathGame.worldName='Sayılar Dünyası'; mathGame.message='Doğru cevabın yazdığı platforma zıpla!'; mathGame.messageTimer=180;
+        mathGame.gameStarted=true; mathGame.paused=false; mathGame.keys={}; mathGame.touchLeft=false; mathGame.touchRight=false; mathGame.touchJump=false;
+        mathGame.player={x:70,y:140,w:42,h:54,vy:0,vx:0,onGround:false,facingRight:true,colorTimer:0,hurtTimer:0,runPhase:0};
+        mathGame.camera={x:0,y:0}; mathGame.particles=[]; mathGame.stars=[]; mathGame.gates=[]; mathGame.platforms=[]; mathGame.coinsList=[];
+        mathGame.tasks=[...MATH_RUN_TASKS].sort((a,b)=>a.diff-b.diff);
+        mathGame.taskIndex=0; mathGame.currentTask=null; mathGame.nextGateX=420; mathGame.currentWorldWidth=35000;
+        resizeMathCanvas(); generateMathRunWorld(); updateMathHUD(); bindMathTouch('touchLeft','touchLeft'); bindMathTouch('touchRight','touchRight'); bindMathTouch('touchJump','touchJump'); mathGameLoop();
+    }
+    function resizeMathCanvas(){
+        const c=mathGame.canvas; c.width=c.parentElement.clientWidth; c.height=c.parentElement.clientHeight;
+        mathGame.stars=[]; for(let i=0;i<130;i++) mathGame.stars.push({x:Math.random()*5000,y:Math.random()*c.height,r:Math.random()*2+0.4,phase:Math.random()*6});
+    }
+    function generateMathRunWorld(){
+        const h=mathGame.canvas.height, ground=h-46;
+        const groundWidth=35000;
+        mathGame.currentWorldWidth=groundWidth;
+        mathGame.platforms=[{x:0,y:ground,w:groundWidth,h:46,type:'ground'}];
+        mathGame.coinsList=[];
+        for(let i=0;i<430;i++){
+            mathGame.coinsList.push({x:180+i*70,y:ground-95-Math.sin(i*.8)*25,r:10,collected:false});
+        }
+        placeNextMathGate();
+    }
+    function getNextMathTask(){
+        if(mathGame.taskIndex>=mathGame.tasks.length){
+            mathGame.taskIndex=0;
+            mathGame.tasks=[...MATH_RUN_TASKS].sort((a,b)=>a.diff-b.diff);
+        }
+        const t=mathGame.tasks[mathGame.taskIndex++];
+        if(t.diff===1)mathGame.worldName='Sayılar Dünyası';
+        else if(t.diff===2)mathGame.worldName='İşlem ve Denklem Vadisi';
+        else if(t.diff===3)mathGame.worldName='Geometri ve Oran Şehri';
+        else mathGame.worldName='Problem ve Üslü Sayılar Üssü';
+        const fixedOpts = Array.isArray(t.opts) ? [...t.opts].map(String) : [];
+        const fixedAns = String(t.ans);
+        if(!fixedOpts.includes(fixedAns)){
+            if(fixedOpts.length >= 3) fixedOpts[0] = fixedAns;
+            else fixedOpts.push(fixedAns);
+        }
+        const uniqueOpts = [];
+        fixedOpts.forEach(opt=>{ if(!uniqueOpts.includes(opt)) uniqueOpts.push(opt); });
+        while(uniqueOpts.length < 3){ uniqueOpts.push(String(Number(fixedAns) + uniqueOpts.length + 1)); }
+        return {...t, ans:fixedAns, opts:shuffleArr(uniqueOpts.slice(0,3))};
+    }
+    function placeNextMathGate(){
+        if(mathGame.answered>=mathGame.totalQuestions)return;
+        const task=getNextMathTask(); mathGame.currentTask=task;
+        const h=mathGame.canvas.height, base=h-145, x=mathGame.nextGateX;
+        mathGame.gates=[];
+        task.opts.forEach((opt,i)=>{
+            mathGame.gates.push({x:x+i*135,y:base-(i===1?25:0),w:110,h:26,opt,correct:opt===task.ans,hit:false,pulse:Math.random()*6});
+        });
+        mathGame.nextGateX += 560;
+        mathGame.currentWorldWidth = Math.max(mathGame.currentWorldWidth, mathGame.nextGateX+1400);
+        const ground=mathGame.platforms&&mathGame.platforms[0];
+        if(ground) ground.w=mathGame.currentWorldWidth;
+    }
+    function updateMathHUD(){
+        document.getElementById('mathLives').textContent='❤️'.repeat(Math.max(0,mathGame.lives||0))+'🤍'.repeat(Math.max(0,(mathGame.maxLives||5)-(mathGame.lives||0)));
+        document.getElementById('mathScore').textContent=mathGame.score;
+        document.getElementById('mathRemain').textContent=Math.max(0,mathGame.totalQuestions-(mathGame.answered||0));
+    }
+    function mathAnswerGate(gate){
+        if(gate.hit || !mathGame.currentTask)return; gate.hit=true;
+        const p=mathGame.player; mathGame.answered++;
+        if(gate.correct){
+            mathGame.score+=100+Math.min(100,mathGame.answered*2); mathGame.coins+=3; saveScore('math',mathGame.score,`Görev: ${mathGame.answered} / ${mathGame.totalQuestions}`); p.colorTimer=28; p.vy=-9; playSound(850); spawnMathParticles(p.x+p.w/2,p.y,'#fde047',24); mathGame.message='✅ Doğru! Yol açıldı, devam et!';
+        }else{
+            mathGame.score=Math.max(0,mathGame.score-25); mathGame.lives=Math.max(0,mathGame.lives-1); p.hurtTimer=30; p.vx=-4; p.vy=-8; playSound(220); spawnMathParticles(p.x+p.w/2,p.y,'#fb7185',18); mathGame.message='❌ Yanlış! Doğru cevap: '+mathGame.currentTask.ans;
+        }
+        mathGame.messageTimer=120; updateMathHUD();
+        if(mathGame.lives<=0){ mathGameOver(); return; }
+        setTimeout(()=>{ if(state.currentScreen==='math' && mathGame.gameStarted){ placeNextMathGate(); } },350);
+        if(mathGame.answered>=mathGame.totalQuestions)setTimeout(mathWorldComplete,650);
+    }
+    function spawnMathParticles(x,y,color,count){for(let i=0;i<count;i++)mathGame.particles.push({x,y,vx:(Math.random()-0.5)*6,vy:(Math.random()-0.8)*6,life:35,color,size:Math.random()*4+2});}
+    function mathUpdate(){
+        if(!mathGame.gameStarted||mathGame.paused)return;
+        const p=mathGame.player; p.runPhase+=0.16;
+        const left=mathGame.keys['ArrowLeft']||mathGame.keys['a']||mathGame.touchLeft;
+        const right=mathGame.keys['ArrowRight']||mathGame.keys['d']||mathGame.touchRight;
+        const jump=mathGame.keys['ArrowUp']||mathGame.keys['w']||mathGame.keys[' ']||mathGame.touchJump;
+        const accel=0.58,max=4.4,fric=0.42;
+        if(left){p.vx=Math.max(-max,p.vx-accel);p.facingRight=false}else if(right){p.vx=Math.min(max,p.vx+accel);p.facingRight=true}else{p.vx*=fric;if(Math.abs(p.vx)<.08)p.vx=0;}
+        if(jump&&p.onGround){p.vy=-12.2;p.onGround=false;mathGame.touchJump=false;playSound(520)}
+        p.vy+=0.58; p.x+=p.vx; p.y+=p.vy; p.onGround=false;
+        for(const plat of mathGame.platforms){ if(p.x+p.w>plat.x&&p.x<plat.x+plat.w&&p.vy>=0&&p.y+p.h>=plat.y&&p.y+p.h<=plat.y+plat.h+18){p.y=plat.y-p.h;p.vy=0;p.onGround=true;} }
+        for(const gate of mathGame.gates){ if(!gate.hit && p.x+p.w>gate.x&&p.x<gate.x+gate.w&&p.y+p.h>gate.y-8&&p.y<gate.y+gate.h){ mathAnswerGate(gate); break; } }
+        for(const coin of mathGame.coinsList){ if(!coin.collected && Math.hypot(p.x+p.w/2-coin.x,p.y+p.h/2-coin.y)<25){coin.collected=true;mathGame.coins++;mathGame.score+=5;saveScore('math',mathGame.score,`Coin: ${mathGame.coins} · Görev: ${mathGame.answered||0} / ${mathGame.totalQuestions||50}`);playSound(720);spawnMathParticles(coin.x,coin.y,'#facc15',8);updateMathHUD();} }
+        if(p.x<0)p.x=0; if(p.y>mathGame.canvas.height+80){p.x=Math.max(60,mathGame.camera.x+60);p.y=120;p.vy=0;mathGame.lives=Math.max(0,mathGame.lives-1);updateMathHUD();if(mathGame.lives<=0){mathGameOver();return;}}
+        mathGame.camera.x+=(p.x-mathGame.canvas.width*.38-mathGame.camera.x)*0.08; mathGame.camera.x=Math.max(0,Math.min(mathGame.camera.x,mathGame.currentWorldWidth-mathGame.canvas.width));
+        mathGame.particles=mathGame.particles.filter(pt=>{pt.x+=pt.vx;pt.y+=pt.vy;pt.vy+=.18;pt.life--;return pt.life>0});
+        if(p.colorTimer>0)p.colorTimer--; if(p.hurtTimer>0)p.hurtTimer--; if(mathGame.messageTimer>0)mathGame.messageTimer--;
+    }
+    function drawNeonRobot(ctx,p){
+        ctx.save(); const cx=p.x+p.w/2, cy=p.y+p.h/2; ctx.translate(cx,cy); ctx.scale(p.facingRight?1:-1,1); ctx.translate(-cx,-cy);
+        ctx.shadowColor=p.colorTimer>0?'#fde047':'#38bdf8'; ctx.shadowBlur=18;
+        const body=ctx.createLinearGradient(p.x,p.y,p.x+p.w,p.y+p.h); body.addColorStop(0,p.hurtTimer>0?'#fb7185':'#67e8f9'); body.addColorStop(.55,p.colorTimer>0?'#fde047':'#a78bfa'); body.addColorStop(1,'#312e81');
+        ctx.fillStyle=body; ctx.beginPath(); ctx.roundRect(p.x+5,p.y+14,p.w-10,p.h-14,14); ctx.fill();
+        ctx.fillStyle='#e0f2fe'; ctx.beginPath(); ctx.roundRect(p.x+3,p.y+2,p.w-6,24,12); ctx.fill();
+        ctx.fillStyle='#0f172a'; ctx.beginPath(); ctx.roundRect(p.x+9,p.y+8,p.w-18,12,7); ctx.fill();
+        ctx.fillStyle='#22d3ee'; ctx.beginPath(); ctx.arc(p.x+17,p.y+14,3,0,Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(p.x+p.w-17,p.y+14,3,0,Math.PI*2); ctx.fill();
+        ctx.strokeStyle='#fde047'; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(p.x+p.w/2,p.y+2); ctx.lineTo(p.x+p.w/2,p.y-7); ctx.stroke(); ctx.beginPath(); ctx.arc(p.x+p.w/2,p.y-9,3,0,Math.PI*2); ctx.fill();
+        const leg=Math.sin(p.runPhase)*4; ctx.fillStyle='#172554'; ctx.fillRect(p.x+11,p.y+p.h-6,8,10+leg); ctx.fillRect(p.x+p.w-19,p.y+p.h-6,8,10-leg);
+        ctx.shadowBlur=0; ctx.restore();
+    }
+    function mathDraw(){
+        const ctx=mathGame.ctx,w=mathGame.canvas.width,h=mathGame.canvas.height,cam=mathGame.camera; ctx.clearRect(0,0,w,h);
+        const bg=ctx.createLinearGradient(0,0,0,h); bg.addColorStop(0,'#12002e'); bg.addColorStop(.48,'#1e1b4b'); bg.addColorStop(1,'#083344'); ctx.fillStyle=bg; ctx.fillRect(0,0,w,h);
+        ctx.strokeStyle='rgba(34,211,238,.12)'; ctx.lineWidth=1; for(let x=-(cam.x*.25%60);x<w;x+=60){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,h);ctx.stroke()} for(let y=0;y<h;y+=50){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke()}
+        for(const s of mathGame.stars){const sx=(s.x-cam.x*.18)%(w+200)-80;ctx.fillStyle=`rgba(255,255,255,${.35+Math.sin(s.phase)*.22})`;ctx.beginPath();ctx.arc(sx,s.y,s.r,0,Math.PI*2);ctx.fill();s.phase+=.01}
+        ctx.save(); ctx.translate(-cam.x,0);
+        for(const plat of mathGame.platforms){const pg=ctx.createLinearGradient(plat.x,plat.y,plat.x,plat.y+plat.h);pg.addColorStop(0,'#99f6e4');pg.addColorStop(.45,'#22d3ee');pg.addColorStop(1,'#0f172a');ctx.fillStyle=pg;ctx.shadowColor='#22d3ee';ctx.shadowBlur=16;ctx.beginPath();ctx.roundRect(plat.x,plat.y,plat.w,plat.h,12);ctx.fill();ctx.shadowBlur=0;ctx.fillStyle='rgba(255,255,255,.32)';ctx.fillRect(plat.x,plat.y+3,plat.w,3)}
+        for(const coin of mathGame.coinsList){if(coin.collected)continue;ctx.save();ctx.translate(coin.x,coin.y);ctx.rotate(Date.now()/500);ctx.fillStyle='#facc15';ctx.shadowColor='#fde047';ctx.shadowBlur=12;ctx.beginPath();ctx.ellipse(0,0,coin.r*.75,coin.r,0,0,Math.PI*2);ctx.fill();ctx.fillStyle='#fff7ad';ctx.fillRect(-2,-7,4,14);ctx.restore();}
+        if(mathGame.currentTask){
+            for(const gate of mathGame.gates){ if(gate.hit)continue; gate.pulse+=.04; const y=gate.y+Math.sin(gate.pulse)*4; ctx.shadowColor='#f0abfc';ctx.shadowBlur=18; const gg=ctx.createLinearGradient(gate.x,y,gate.x,gate.y+gate.h+20); gg.addColorStop(0,'#f5d0fe');gg.addColorStop(.5,'#c084fc');gg.addColorStop(1,'#581c87'); ctx.fillStyle=gg; ctx.beginPath(); ctx.roundRect(gate.x,y,gate.w,gate.h,12);ctx.fill(); ctx.fillStyle='rgba(255,255,255,.28)';ctx.fillRect(gate.x+8,y+4,gate.w-16,3); ctx.shadowBlur=0; ctx.fillStyle='#fff';ctx.font='900 20px Poppins';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(gate.opt,gate.x+gate.w/2,y+gate.h/2); }
+        }
+        drawNeonRobot(ctx,mathGame.player);
+        for(const pt of mathGame.particles){ctx.globalAlpha=Math.max(0,pt.life/35);ctx.fillStyle=pt.color;ctx.beginPath();ctx.arc(pt.x,pt.y,pt.size,0,Math.PI*2);ctx.fill()} ctx.globalAlpha=1; ctx.restore();
+        if(mathGame.currentTask){ctx.save();ctx.shadowColor='#000';ctx.shadowBlur=16;const bw=Math.min(w-70,650), bx=(w-bw)/2;ctx.fillStyle='rgba(15,23,42,.78)';ctx.beginPath();ctx.roundRect(bx,18,bw,74,24);ctx.fill();ctx.strokeStyle='rgba(250,204,21,.75)';ctx.lineWidth=2;ctx.stroke();ctx.fillStyle='#fde047';ctx.font='900 15px Poppins';ctx.textAlign='center';ctx.fillText('🌍 '+mathGame.worldName+'   •   Görev '+(mathGame.answered+1)+' / '+mathGame.totalQuestions,bx+bw/2,43);ctx.fillStyle='#fff';ctx.font='900 24px Poppins';ctx.fillText(mathGame.currentTask.q,bx+bw/2,73);ctx.restore();}
+        if(mathGame.messageTimer>0){ctx.save();ctx.globalAlpha=Math.min(1,mathGame.messageTimer/30);ctx.fillStyle='rgba(0,0,0,.55)';ctx.beginPath();ctx.roundRect(w/2-210,h-105,420,42,20);ctx.fill();ctx.fillStyle='#fff';ctx.font='800 16px Poppins';ctx.textAlign='center';ctx.fillText(mathGame.message,w/2,h-79);ctx.restore();}
+    }
+    function mathWorldComplete(){mathGame.paused=true;saveScore('math',mathGame.score,`Görev: ${mathGame.answered||mathGame.askedQuestions||0} / ${mathGame.totalQuestions||50}`);const m=document.getElementById('modalContainer');m.innerHTML=`<div class="modal-overlay"><div class="modal-card"><h2>🎉 Matematik Evreni Tamamlandı!</h2><p>Puan: ${mathGame.score} | Coin: ${mathGame.coins}</p><button class="btn-3d" id="mathRestartBtn">Yeniden Başla</button><button class="btn-3d" id="mathMenuBtn">Menü</button></div></div>`;document.getElementById('mathRestartBtn').addEventListener('click',()=>{m.innerHTML='';startMathGame()});document.getElementById('mathMenuBtn').addEventListener('click',()=>{m.innerHTML='';showScreen('course')})}
+
+    document.getElementById('mathBackBtn').addEventListener('click',()=>{mathGame.gameStarted=false;showScreen('course')});
+    window.addEventListener('resize',()=>{if(state.currentScreen==='math')resizeMathCanvas();if(state.currentScreen==='english')resizeEngCanvas();if(state.currentScreen==='turkish')resizeTrCanvas()});
+})();
+</script>
+</body>
+</html>
